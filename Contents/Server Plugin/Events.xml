@@ -1,0 +1,537 @@
+<?xml version="1.0"?>
+<Events>
+	<!-- ==================== CAMERA EVENTS ==================== -->
+	<Event id="motionDetected">
+		<Name>Camera: Motion Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="personDetected">
+		<Name>Camera: Person Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="vehicleDetected">
+		<Name>Camera: Vehicle Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="packageDetected">
+		<Name>Camera: Package Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="doorbellRing">
+		<Name>Camera: Doorbell Ring</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- Audio detection (3.12.8) - confirmed via the official event schema
+	     (smartAudioDetect / smartDetectTypes: alrmSmoke, alrmCmonx,
+	     alrmSiren, alrmBabyCry, alrmSpeak, alrmBark, alrmBurglar,
+	     alrmCarHorn, alrmGlassBreak), using whatever microphone the camera
+	     already has - no dedicated smoke/CO sensor hardware needed. -->
+	<Event id="smokeAlarmDetected">
+		<Name>Camera: Smoke Alarm Sound Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="coAlarmDetected">
+		<Name>Camera: CO Alarm Sound Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="glassBreakDetected">
+		<Name>Camera: Glass Break Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="burglarAlarmDetected">
+		<Name>Camera: Burglar Alarm Sound Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="sirenDetected">
+		<Name>Camera: Siren Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="babyCryDetected">
+		<Name>Camera: Baby Crying Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="speechDetected">
+		<Name>Camera: Speech Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="barkDetected">
+		<Name>Camera: Bark Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="carHornDetected">
+		<Name>Camera: Car Horn Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="cameraConnected">
+		<Name>Camera: Connected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="cameraDisconnected">
+		<Name>Camera: Disconnected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="cameraDark">
+		<Name>Camera: Became Dark</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="cameraLight">
+		<Name>Camera: Became Light</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Camera:</Label>
+				<List class="self" filter="" method="getCameraList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== SENSOR EVENTS ==================== -->
+	<Event id="sensorMotionDetected">
+		<Name>Sensor: Motion Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Sensor:</Label>
+				<List class="self" filter="" method="getSensorList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="sensorOpened">
+		<Name>Sensor: Contact Opened</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Sensor:</Label>
+				<List class="self" filter="" method="getSensorList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="sensorClosed">
+		<Name>Sensor: Contact Closed</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Sensor:</Label>
+				<List class="self" filter="" method="getSensorList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="sensorAlarmTriggered">
+		<Name>Sensor: Alarm Triggered</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Sensor:</Label>
+				<List class="self" filter="" method="getSensorList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== NETWORK DEVICE EVENTS ==================== -->
+	<Event id="deviceOnline">
+		<Name>Network Device: Came Online</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceOffline">
+		<Name>Network Device: Went Offline</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== PORT EVENTS ==================== -->
+	<Event id="portLinkUp">
+		<Name>Port: Link Up</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Port:</Label>
+				<List class="self" filter="" method="getPortDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="portLinkDown">
+		<Name>Port: Link Down</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Port:</Label>
+				<List class="self" filter="" method="getPortDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="portPoeOn">
+		<Name>Port: PoE Enabled</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Port:</Label>
+				<List class="self" filter="" method="getPortDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="portPoeOff">
+		<Name>Port: PoE Disabled</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Port:</Label>
+				<List class="self" filter="" method="getPortDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== CLIENT EVENTS ==================== -->
+	<Event id="clientConnected">
+		<Name>Client: Connected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Client:</Label>
+				<List class="self" filter="" method="getClientList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="clientDisconnected">
+		<Name>Client: Disconnected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Client:</Label>
+				<List class="self" filter="" method="getClientList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="clientBlocked">
+		<Name>Client: Blocked</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Client:</Label>
+				<List class="self" filter="" method="getClientList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="clientUnblocked">
+		<Name>Client: Unblocked</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Client:</Label>
+				<List class="self" filter="" method="getClientList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== ACCESS DOOR EVENTS ==================== -->
+	<Event id="doorUnlocked">
+		<Name>Access: Door Unlocked</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Door:</Label>
+				<List class="self" filter="" method="getDoorList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="doorLocked">
+		<Name>Access: Door Locked</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Door:</Label>
+				<List class="self" filter="" method="getDoorList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== NETWORK DEVICE HEALTH EVENTS ====================
+	     Sourced from the legacy WebSocket "events" message stream (EVT_* keys).
+	     Event key names and payload field semantics cross-checked against
+	     Kane610/aiounifi (MIT License) - github.com/Kane610/aiounifi. -->
+	<Event id="deviceOverheat">
+		<Name>Network Device: Overheating</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="devicePoeOverload">
+		<Name>Network Device: PoE Overload</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="devicePoeDisconnect">
+		<Name>Network Device: PoE Disconnected (Overload)</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceRogueDetected">
+		<Name>Network Device: Rogue AP/DHCP Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+			<Field id="helpText" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fires when this device detects a rogue (unauthorised) access point nearby, or a rogue DHCP server on the wire.</Label>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceRadarDetected">
+		<Name>Network Device: Radar Detected</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+			<Field id="helpText" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fires when a DFS radar signal forces this access point to switch channels (5GHz radar avoidance).</Label>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="devicePossibleInterference">
+		<Name>Network Device: Possible Interference</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceStpBlocking">
+		<Name>Network Device: STP Port Blocking</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+			<Field id="helpText" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fires when Spanning Tree Protocol blocks a port on this switch, usually indicating a network loop.</Label>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceRestarted">
+		<Name>Network Device: Restarted</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceUpgraded">
+		<Name>Network Device: Firmware Upgraded</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceUpgradeFailed">
+		<Name>Network Device: Firmware Upgrade Failed</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="deviceAdopted">
+		<Name>Network Device: Adopted</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Device:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="gatewayWanTransition">
+		<Name>Gateway: WAN Transition (Failover)</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Gateway:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+			<Field id="helpText" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fires when the gateway switches WAN uplinks (e.g. primary internet failed over to backup/cellular). Check the device's "Last Event Message" state for details on which WAN is now active.</Label>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== CLIENT EVENTS ==================== -->
+	<Event id="clientRoamed">
+		<Name>Client: Roamed</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Client:</Label>
+				<List class="self" filter="" method="getClientList"/>
+			</Field>
+			<Field id="helpText" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fires when a wireless client roams to a different access point or radio band without fully disconnecting.</Label>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<!-- ==================== CONTROLLER-WIDE EVENTS ==================== -->
+	<Event id="controllerUpdateAvailable">
+		<Name>Controller: UniFi OS Update Available</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Controller:</Label>
+				<List class="self" filter="" method="getControllerList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="controllerIpsAlert">
+		<Name>Controller: IPS/IDS Alert</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Controller:</Label>
+				<List class="self" filter="" method="getControllerList"/>
+			</Field>
+			<Field id="helpText" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fires when the Intrusion Prevention/Detection System flags suspicious traffic. Check the controller's "Last Event Message" state for details.</Label>
+			</Field>
+		</ConfigUI>
+	</Event>
+
+	<Event id="controllerAdminLogin">
+		<Name>Controller: Admin Login</Name>
+		<ConfigUI>
+			<Field id="device" type="menu">
+				<Label>Controller:</Label>
+				<List class="self" filter="" method="getControllerList"/>
+			</Field>
+		</ConfigUI>
+	</Event>
+</Events>

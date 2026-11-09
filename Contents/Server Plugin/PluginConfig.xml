@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<PluginConfig>
+	<Field id="showDebugInfo" type="checkbox" defaultValue="false">
+		<Label>Show debug info in event log:</Label>
+	</Field>
+	
+	<Field id="separator1" type="separator"/>
+	<Field id="label1" type="label">
+		<Label>═══ Client Auto-Discovery ═══</Label>
+	</Field>
+	
+	<Field id="autoCreateClients" type="checkbox" defaultValue="true">
+		<Label>Auto-create client devices:</Label>
+	</Field>
+	
+	<Field id="autoCreateKnownOnly" type="checkbox" defaultValue="true" visibleBindingId="autoCreateClients" visibleBindingValue="true">
+		<Label>Only auto-create known clients:</Label>
+	</Field>
+	
+	<Field id="helpText" type="label" fontSize="small" fontColor="darkgray" visibleBindingId="autoCreateClients" visibleBindingValue="true">
+		<Label>• Known clients are devices the controller recognizes (not guests/temporary devices)
+• Unknown clients (guests, one-time visitors) won't auto-create devices
+• Use "Create Unknown Clients" action to manually add unknown clients</Label>
+	</Field>
+</PluginConfig>
