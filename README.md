@@ -4,11 +4,9 @@ An [Indigo](https://www.indigodomo.com) plugin bridging **UniFi Network**, **Uni
 
 Released under the MIT License by Durosity.
 
-## ⚠️ Beta software — please read before installing
+**Before using this plugin, back up your UniFi configuration.** This plugin writes to your live UniFi configuration: it can enable/disable firewall policies and WLANs, change port forwards, lock/unlock doors, reboot devices, change camera and sensor settings, and (experimentally) arm/disarm Protect's Alarm Manager.  I've tested it quite extensively at my end, but it's plausible different configurations and setups may not work the same so please be careful.
 
-This plugin is in **active beta**. It writes to your live UniFi configuration: it can enable/disable firewall policies and WLANs, change port forwards, lock/unlock doors, reboot devices, change camera and sensor settings, and (experimentally) arm/disarm Protect's Alarm Manager.
-
-**Before using this plugin, back up your UniFi configuration.** Each UniFi OS console has its own backup/restore option (Settings → System → Backups on a Network console; the UNAS has its own separate backup under its own Settings). Do this now, not after something goes wrong. Real care is taken to confirm behavior against real data before shipping anything (see `ROADMAP.md` for the detailed, ongoing record of what's confirmed vs. still unverified), but this is community software with no warranty — you are responsible for your own backups, and for reviewing what an action does before wiring it into an automation that runs unattended.
+Each UniFi OS console has its own backup/restore option (Settings → System → Backups on a Network console; the UNAS has its own separate backup under its own Settings). Do this now, not after something goes wrong. Real care is taken to confirm behavior against real data before shipping anything (see `ROADMAP.md` for the detailed, ongoing record of what's confirmed vs. still unverified), but this is community software with no warranty — you are responsible for your own backups, and for reviewing what an action does before wiring it into an automation that runs unattended.
 
 A few specific things worth knowing going in:
 
