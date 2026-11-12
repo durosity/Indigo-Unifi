@@ -1,0 +1,4 @@
+   .DS_Store
+   *.indigoPlugin/Contents/Packages/
+   __pycache__/
+   *.pyc
