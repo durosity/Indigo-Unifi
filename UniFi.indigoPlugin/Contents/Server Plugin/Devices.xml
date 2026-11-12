@@ -1,0 +1,2557 @@
+<?xml version="1.0"?>
+<Devices>
+	<!-- UNIFI CONTROLLER DEVICE -->
+	<Device type="custom" id="unifiController">
+		<Name>UniFi Controller (Network)</Name>
+		<ConfigUI>
+			<!-- ===================== Connection ===================== -->
+			<Field id="label_conn" type="label">
+				<Label>═══ Connection ═══</Label>
+			</Field>
+			<Field id="address" type="textfield">
+				<Label>Controller IP Address:</Label>
+			</Field>
+			<Field id="port" type="textfield" defaultValue="443">
+				<Label>HTTPS Port:</Label>
+				<Description>443 for UniFi OS consoles (UDM Pro etc), 8443 for self-hosted, 11443 for UniFi OS Server.</Description>
+			</Field>
+			<Field id="site" type="textfield" defaultValue="default">
+				<Label>Site ID:</Label>
+				<Description>Usually 'default'. Multi-site setups will use the site short name.</Description>
+			</Field>
+			<Field id="verifySSL" type="checkbox" defaultValue="false">
+				<Label>Verify SSL Certificate:</Label>
+			</Field>
+
+			<!-- ===================== Features ===================== -->
+			<Field id="sep_feat" type="separator"/>
+			<Field id="label_feat" type="label">
+				<Label>═══ Features to Enable ═══</Label>
+			</Field>
+			<Field id="enableNetwork" type="checkbox" defaultValue="true">
+				<Label>Enable UniFi Network:</Label>
+			</Field>
+			<Field id="enableProtect" type="checkbox" defaultValue="true">
+				<Label>Enable UniFi Protect:</Label>
+			</Field>
+			<Field id="enableAccess" type="checkbox" defaultValue="false">
+				<Label>Enable UniFi Access:</Label>
+			</Field>
+
+			<!-- ===================== API Keys ===================== -->
+			<Field id="sep_keys" type="separator"/>
+			<Field id="label_keys" type="label">
+				<Label>═══ API Keys ═══</Label>
+			</Field>
+			<Field id="label_keys_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Network and Protect share a SINGLE key from the unified Integrations page:&#10;Settings → Control Plane → Integrations (or visit https://[controller-ip]/network/default/integrations/).&#10;&#10;UniFi Access uses a SEPARATE token, generated inside the UniFi Access application itself (look for an API Token / Integrations menu within Access). The Access API runs on a different port (12445 by default) with Bearer authentication.</Label>
+			</Field>
+			<Field id="networkApiKey" type="textfield" secure="true">
+				<Label>Network/Protect API Key:</Label>
+			</Field>
+			<Field id="accessApiKey" type="textfield" secure="true" visibleBindingId="enableAccess" visibleBindingValue="true">
+				<Label>Access API Token:</Label>
+			</Field>
+			<Field id="accessPort" type="textfield" defaultValue="12445" visibleBindingId="enableAccess" visibleBindingValue="true">
+				<Label>Access Port:</Label>
+				<Description>UniFi Access runs on its own port (default 12445), separate from the main HTTPS port.</Description>
+			</Field>
+
+			<!-- ===================== Legacy auth ===================== -->
+			<Field id="sep_legacy" type="separator"/>
+			<Field id="label_legacy" type="label">
+				<Label>═══ Legacy Username/Password (bridge) ═══</Label>
+			</Field>
+			<Field id="label_legacy_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Required for endpoints not yet exposed by the official Integration API:&#10;• Network: PoE port mode toggle, client block/unblock, rich device stats&#10;• Drive (UNAS): all functionality&#10;&#10;Use a LOCAL-ONLY admin account (Settings → Admins → Create New, tick 'Restrict to local access only'). Do NOT use a UI.com cloud account or one with MFA.</Label>
+			</Field>
+			<Field id="legacyUsername" type="textfield">
+				<Label>Local Admin Username:</Label>
+			</Field>
+			<Field id="legacyPassword" type="textfield" secure="true">
+				<Label>Local Admin Password:</Label>
+			</Field>
+
+			<!-- ===================== Test ===================== -->
+			<Field id="sep_test" type="separator"/>
+			<Field id="testConnectionButton" type="button">
+				<Label>Test Connection:</Label>
+				<Title>Test All Configured APIs</Title>
+				<CallbackMethod>testConnection</CallbackMethod>
+				<Description>Tests each enabled API independently. Watch the Indigo log for results.</Description>
+			</Field>
+
+			<!-- ===================== Polling ===================== -->
+			<Field id="sep_poll" type="separator"/>
+			<Field id="label_poll" type="label">
+				<Label>═══ Update Intervals ═══</Label>
+			</Field>
+			<Field id="label_poll_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Real-time events (motion, smart detect, doorbell, client connect/disconnect, port state, door unlock) arrive instantly via WebSockets and are NOT affected by these intervals.&#10;The intervals below only control how often slow-changing stats (CPU, memory, temperature, throughput, RPM) are refreshed.</Label>
+			</Field>
+			<Field id="aggressivePolling" type="checkbox" defaultValue="false">
+				<Label>Aggressive polling mode (30s):</Label>
+				<Description>Polls every 30 seconds. Only enable if WebSockets are unreliable on your controller.</Description>
+			</Field>
+			<Field id="statsIntervalSec" type="menu" defaultValue="300">
+				<Label>Stats Poll Interval:</Label>
+				<List>
+					<Option value="60">1 minute (min)</Option>
+					<Option value="120">2 minutes</Option>
+					<Option value="300">★ 5 minutes (recommended)</Option>
+					<Option value="600">10 minutes</Option>
+					<Option value="900">15 minutes</Option>
+					<Option value="1800">30 minutes (max)</Option>
+				</List>
+				<Description>How often to refresh CPU, memory, temperature, throughput, fan RPM. Recommended: 5 min.</Description>
+			</Field>
+			<Field id="sanityIntervalSec" type="menu" defaultValue="900">
+				<Label>Sanity Re-Sync Interval:</Label>
+				<List>
+					<Option value="0">Off (trust WebSocket)</Option>
+					<Option value="300">5 minutes (min when on)</Option>
+					<Option value="600">10 minutes</Option>
+					<Option value="900">★ 15 minutes (recommended)</Option>
+					<Option value="1800">30 minutes</Option>
+					<Option value="3600">60 minutes (max)</Option>
+				</List>
+				<Description>Periodic full re-sync to catch any WebSocket messages that might have been dropped. Recommended: 15 min.</Description>
+			</Field>
+
+			<!-- ===================== Randomised Client Purge ===================== -->
+			<Field id="sep_purge" type="separator"/>
+			<Field id="label_purge" type="label">
+				<Label>═══ Randomised Client Purge ═══</Label>
+			</Field>
+			<Field id="label_purge_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>iPhones, Android phones, and Windows machines often use "private" (locally-administered, randomised) MAC addresses for privacy. These accumulate as visitors come and go. The purge can remove ones that haven't been seen for a while, both from Indigo and from UniFi itself.&#10;Run the "Purge Randomised Clients" action manually, or schedule it via an Indigo Time/Date trigger.</Label>
+			</Field>
+			<Field id="purgeMinAgeHours" type="textfield" defaultValue="24">
+				<Label>Purge after (hours):</Label>
+				<Description>Minimum hours since the client was last seen before it qualifies for purge. Default 24.</Description>
+			</Field>
+			<Field id="purgeSkipNamed" type="checkbox" defaultValue="true">
+				<Label>Skip if UniFi has a custom name:</Label>
+				<Description>Don't purge clients that have a custom name, hostname override, or user note set in UniFi.</Description>
+			</Field>
+			<Field id="purgeSkipMetadata" type="checkbox" defaultValue="true">
+				<Label>Skip if has fixed IP or user group:</Label>
+				<Description>Don't purge clients with a fixed-IP reservation, user group assignment, or device-type override in UniFi.</Description>
+			</Field>
+			<Field id="purgeSkipIndigoDevice" type="checkbox" defaultValue="true">
+				<Label>Skip if an Indigo device exists:</Label>
+				<Description>Don't purge a client that's represented by an Indigo device (the user has explicitly added it).</Description>
+			</Field>
+			<Field id="purgeDryRun" type="checkbox" defaultValue="false">
+				<Label>Dry run (preview only):</Label>
+				<Description>When ticked, the purge action only logs what it WOULD remove without actually doing anything. Useful for testing the threshold.</Description>
+			</Field>
+
+			<!-- ===================== Auto-Create Clients ===================== -->
+			<Field id="sep_autocreate" type="separator"/>
+			<Field id="label_autocreate" type="label">
+				<Label>═══ Auto-Create Clients ═══</Label>
+			</Field>
+			<Field id="label_autocreate_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>When enabled, a new Indigo device is created automatically the moment UniFi reports a brand-new client connecting - no need to run "Create Unknown Clients" yourself. Respects the same "previously deleted" list as the manual discovery actions, so deleting a client device here won't bring it straight back.</Label>
+			</Field>
+			<Field id="autoCreateClients" type="checkbox" defaultValue="false" visibleBindingId="enableNetwork" visibleBindingValue="true">
+				<Label>Auto-create on connect:</Label>
+			</Field>
+			<Field id="autoCreateSkipRandomized" type="checkbox" defaultValue="true" visibleBindingId="autoCreateClients" visibleBindingValue="true">
+				<Label>Skip randomised/private MACs:</Label>
+				<Description>Phones and some other devices rotate a private MAC address for privacy - each rotation looks like a brand-new client to UniFi. Leave this ticked to avoid a constantly growing pile of devices for what's really the same phone. Named/fixed-IP clients are unaffected by this since they don't use a rotating MAC in the first place.</Description>
+			</Field>
+
+			<!-- ===================== Device Discovery ===================== -->
+			<Field id="sep_disc" type="separator"/>
+			<Field id="label_disc" type="label">
+				<Label>═══ Create Devices ═══</Label>
+			</Field>
+			<Field id="label_disc_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Save the controller config first, then click these to discover devices. New devices will be named with the prefix and suffix below — existing devices are not renamed.</Label>
+			</Field>
+			<Field id="deviceNamePrefix" type="textfield" defaultValue="">
+				<Label>Device name prefix:</Label>
+			</Field>
+			<Field id="deviceNameSuffix" type="textfield" defaultValue="">
+				<Label>Device name suffix:</Label>
+			</Field>
+			<Field id="createCamerasButton" type="button" visibleBindingId="enableProtect" visibleBindingValue="true">
+				<Label>Cameras:</Label>
+				<Title>Discover and Create Cameras</Title>
+				<CallbackMethod>createCameraDevices</CallbackMethod>
+			</Field>
+			<Field id="createSensorsButton" type="button" visibleBindingId="enableProtect" visibleBindingValue="true">
+				<Label>Sensors:</Label>
+				<Title>Discover and Create Sensors</Title>
+				<CallbackMethod>createSensorDevices</CallbackMethod>
+			</Field>
+			<Field id="createNetworkDevicesButton" type="button" visibleBindingId="enableNetwork" visibleBindingValue="true">
+				<Label>Network Devices:</Label>
+				<Title>Discover and Create Devices</Title>
+				<CallbackMethod>createNetworkDevices</CallbackMethod>
+			</Field>
+			<Field id="createAccessDoorsButton" type="button" visibleBindingId="enableAccess" visibleBindingValue="true">
+				<Label>Access Doors:</Label>
+				<Title>Discover and Create Doors</Title>
+				<CallbackMethod>createAccessDoors</CallbackMethod>
+			</Field>
+		</ConfigUI>
+		<States>
+			<!-- Basic states -->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id="connected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Connected</TriggerLabel>
+				<ControlPageLabel>Connected</ControlPageLabel>
+			</State>
+			<State id="uptime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Uptime</TriggerLabel>
+				<ControlPageLabel>Uptime</ControlPageLabel>
+			</State>
+			<State id="cpuUsage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CPU Usage</TriggerLabel>
+				<ControlPageLabel>CPU Usage</ControlPageLabel>
+			</State>
+			<State id="memoryUsage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Memory Usage</TriggerLabel>
+				<ControlPageLabel>Memory Usage</ControlPageLabel>
+			</State>
+			
+			<!-- Protect states -->
+			<State id="protectVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Protect Version</TriggerLabel>
+				<ControlPageLabel>Protect Version</ControlPageLabel>
+			</State>
+			<State id="nvrName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>NVR Name</TriggerLabel>
+				<ControlPageLabel>NVR Name</ControlPageLabel>
+			</State>
+			<State id="cameraCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Camera Count</TriggerLabel>
+				<ControlPageLabel>Camera Count</ControlPageLabel>
+			</State>
+			<State id="storageUsed">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Storage Used</TriggerLabel>
+				<ControlPageLabel>Storage Used (GB)</ControlPageLabel>
+			</State>
+			<State id="storageTotal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Storage Total</TriggerLabel>
+				<ControlPageLabel>Storage Total (GB)</ControlPageLabel>
+			</State>
+			
+			<!-- Network states -->
+			<State id="networkDeviceCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Network Device Count</TriggerLabel>
+				<ControlPageLabel>Network Device Count</ControlPageLabel>
+			</State>
+			<State id="switchCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Switch Count</TriggerLabel>
+				<ControlPageLabel>Switches</ControlPageLabel>
+			</State>
+			<State id="apCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Access Point Count</TriggerLabel>
+				<ControlPageLabel>Access Points</ControlPageLabel>
+			</State>
+			<State id="gatewayCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Gateway Count</TriggerLabel>
+				<ControlPageLabel>Gateways</ControlPageLabel>
+			</State>
+
+			<!-- Last controller-wide event (IPS alerts, admin login, update
+			     available, and anything else not tied to a specific device
+			     or client) -->
+			<State id="lastEventKey">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Key</TriggerLabel>
+				<ControlPageLabel>Last Event</ControlPageLabel>
+			</State>
+			<State id="lastEventMessage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Message</TriggerLabel>
+				<ControlPageLabel>Last Event Message</ControlPageLabel>
+			</State>
+			<State id="lastEventAt">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Time</TriggerLabel>
+				<ControlPageLabel>Last Event Time</ControlPageLabel>
+			</State>
+			<State id="updateAvailable">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>UniFi OS Update Available</TriggerLabel>
+				<ControlPageLabel>Update Available</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>status</UiDisplayStateId>
+	</Device>
+
+	<!-- PROTECT CAMERA DEVICE -->
+	<Device type="sensor" id="protectCamera">
+		<Name>UniFi Protect Camera</Name>
+		<ConfigUI>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true" />
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true" />
+			<Field id="controllerId" type="menu">
+				<Label>UniFi Controller:</Label>
+				<List class="self" filter="" method="getControllerList"/>
+			</Field>
+			<Field id="cameraId" type="textfield">
+				<Label>Camera ID:</Label>
+			</Field>
+			<Field id="cameraName" type="textfield">
+				<Label>Camera Name:</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<!-- onOffState is a native state for type="sensor" - do NOT
+			     redeclare it here (Indigo rejects this at load time as
+			     "illegal state key... native state keys cannot be
+			     overridden" and ignores the whole declaration, including
+			     these trigger/control-page labels, silently falling back
+			     to its own built-in ones). Text shown for it is set at
+			     runtime via uiValue on updateStateOnServer instead - see
+			     the Detected/Clear motion-event handlers in plugin.py. -->
+
+			<!-- Status -->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id="isConnected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Connected</TriggerLabel>
+				<ControlPageLabel>Connected</ControlPageLabel>
+			</State>
+			<State id="eventFeedLive">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Event Feed Live</TriggerLabel>
+				<ControlPageLabel>Event Feed Live</ControlPageLabel>
+			</State>
+
+			<!-- Detection states -->
+			<State id="motionDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Motion Detected</TriggerLabel>
+				<ControlPageLabel>Motion Detected</ControlPageLabel>
+			</State>
+			<State id="lastMotion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Motion</TriggerLabel>
+				<ControlPageLabel>Last Motion</ControlPageLabel>
+			</State>
+			<State id="personDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Person Detected</TriggerLabel>
+				<ControlPageLabel>Person Detected</ControlPageLabel>
+			</State>
+			<State id="lastPersonDetection">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Person Detection</TriggerLabel>
+				<ControlPageLabel>Last Person Detection</ControlPageLabel>
+			</State>
+			<State id="vehicleDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Vehicle Detected</TriggerLabel>
+				<ControlPageLabel>Vehicle Detected</ControlPageLabel>
+			</State>
+			<State id="packageDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Package Detected</TriggerLabel>
+				<ControlPageLabel>Package Detected</ControlPageLabel>
+			</State>
+
+			<!-- Audio detection (3.12.8) - via the camera's own microphone,
+			     confirmed official event (smartAudioDetect). Independent
+			     of onOffState/motionDetected on purpose - see plugin.py
+			     for why audio isn't folded into "activity" by default. -->
+			<State id="audioDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Audio Event Active (any type)</TriggerLabel>
+				<ControlPageLabel>Audio Detected</ControlPageLabel>
+			</State>
+			<State id="lastAudio">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Audio Event</TriggerLabel>
+				<ControlPageLabel>Last Audio Event</ControlPageLabel>
+			</State>
+			<State id="smokeAlarmDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Smoke Alarm Sound Detected</TriggerLabel>
+				<ControlPageLabel>Smoke Alarm Detected</ControlPageLabel>
+			</State>
+			<State id="coAlarmDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>CO Alarm Sound Detected</TriggerLabel>
+				<ControlPageLabel>CO Alarm Detected</ControlPageLabel>
+			</State>
+			<State id="sirenDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Siren Detected</TriggerLabel>
+				<ControlPageLabel>Siren Detected</ControlPageLabel>
+			</State>
+			<State id="babyCryDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Baby Crying Detected</TriggerLabel>
+				<ControlPageLabel>Baby Cry Detected</ControlPageLabel>
+			</State>
+			<State id="speechDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Speech Detected</TriggerLabel>
+				<ControlPageLabel>Speech Detected</ControlPageLabel>
+			</State>
+			<State id="barkDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Bark Detected</TriggerLabel>
+				<ControlPageLabel>Bark Detected</ControlPageLabel>
+			</State>
+			<State id="burglarAlarmDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Burglar Alarm Sound Detected</TriggerLabel>
+				<ControlPageLabel>Burglar Alarm Detected</ControlPageLabel>
+			</State>
+			<State id="carHornDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Car Horn Detected</TriggerLabel>
+				<ControlPageLabel>Car Horn Detected</ControlPageLabel>
+			</State>
+			<State id="glassBreakDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Glass Break Detected</TriggerLabel>
+				<ControlPageLabel>Glass Break Detected</ControlPageLabel>
+			</State>
+
+			<!-- Doorbell states -->
+			<State id="doorbellRinging">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Doorbell Ringing</TriggerLabel>
+				<ControlPageLabel>Doorbell Ringing</ControlPageLabel>
+			</State>
+			<State id="lastDoorbellRing">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Doorbell Ring</TriggerLabel>
+				<ControlPageLabel>Last Doorbell Ring</ControlPageLabel>
+			</State>
+			
+			<!-- Camera properties -->
+			<State id="isDark">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Dark</TriggerLabel>
+				<ControlPageLabel>Is Dark</ControlPageLabel>
+			</State>
+			<State id="voltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Voltage</TriggerLabel>
+				<ControlPageLabel>Voltage</ControlPageLabel>
+			</State>
+			<State id="recordingMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Recording Mode</TriggerLabel>
+				<ControlPageLabel>Recording Mode</ControlPageLabel>
+			</State>
+			<State id="videoMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Video Mode</TriggerLabel>
+				<ControlPageLabel>Video Mode</ControlPageLabel>
+			</State>
+			<State id="hdrType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>HDR Mode</TriggerLabel>
+				<ControlPageLabel>HDR Mode</ControlPageLabel>
+			</State>
+			<State id="micVolume">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Microphone Volume</TriggerLabel>
+				<ControlPageLabel>Mic Volume</ControlPageLabel>
+			</State>
+			<State id="irMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>IR Mode</TriggerLabel>
+				<ControlPageLabel>IR Mode</ControlPageLabel>
+			</State>
+			<State id="statusLight">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Status Light</TriggerLabel>
+				<ControlPageLabel>Status Light</ControlPageLabel>
+			</State>
+
+			<!-- Network -->
+			<State id="ipAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>IP Address</TriggerLabel>
+				<ControlPageLabel>IP Address</ControlPageLabel>
+			</State>
+			<State id="macAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>MAC Address</TriggerLabel>
+				<ControlPageLabel>MAC Address</ControlPageLabel>
+			</State>
+			<State id="linkSpeed">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Link Speed</TriggerLabel>
+				<ControlPageLabel>Link Speed (Mbps)</ControlPageLabel>
+			</State>
+			<State id="uptime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Uptime</TriggerLabel>
+				<ControlPageLabel>Uptime</ControlPageLabel>
+			</State>
+
+			<!-- RTSP URLs -->
+			<State id="rtspUrlHigh">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (High)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (High)</ControlPageLabel>
+			</State>
+			<State id="rtspUrlMedium">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (Medium)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (Medium)</ControlPageLabel>
+			</State>
+			<State id="rtspUrlLow">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (Low)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (Low)</ControlPageLabel>
+			</State>
+			<State id="rtspUrlPackage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (Package Camera)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (Package)</ControlPageLabel>
+			</State>
+			<State id="snapshotUrl">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Snapshot URL</TriggerLabel>
+				<ControlPageLabel>Snapshot URL</ControlPageLabel>
+			</State>
+			
+			<!-- Firmware and model -->
+			<State id="firmwareVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware</ControlPageLabel>
+			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Model</TriggerLabel>
+				<ControlPageLabel>Model</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>status</UiDisplayStateId>
+	</Device>
+
+	<!-- Package Camera (3.12.9, rebuilt 3.12.12) - linked child device for
+	     doorbells/cameras with a secondary package-viewing lens. Confirmed
+	     official: the RTSP endpoint's own `channelQuality` enum is high/
+	     medium/low/package - the same /v1/cameras/{id}/rtsps-stream
+	     mechanism protectCamera already uses. `hasPackageCamera` (which
+	     cameras actually have one) is legacy-bootstrap-only data, not in
+	     the official schema - the parent-camera picker below uses it when
+	     available and falls back to listing every camera when it isn't.
+
+	     type="sensor" with the SAME full state list as protectCamera, at
+	     the user's explicit request - genuinely reasonable, since this is
+	     the same camera object in Protect's own data model, not separate
+	     hardware. Every state except rtspUrlPackage is a direct mirror of
+	     the parent protectCamera device's own states (kept in sync both
+	     on refresh and immediately via WS events / RTSP actions on either
+	     device - see _update_packagecam_states/_mirror_to_package_camera
+	     in plugin.py); only rtspUrlPackage and the RTSP enable/disable
+	     actions are genuinely this device's own. -->
+	<Device type="sensor" id="protectPackageCamera">
+		<Name>UniFi Protect Package Camera</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="parentCameraId" type="menu" defaultValue="">
+				<Label>Parent Camera (Doorbell):</Label>
+				<List class="self" method="getPackageCameraParentList"/>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>Represents the secondary "package" lens some doorbell cameras have, alongside their main view. Mirrors its parent camera's full state structure (motion/detection/audio/connection/etc.) since it's the same underlying camera object - only the RTSP stream for this lens (enabled/disabled via the two actions below) is genuinely unique to this device.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpPackageCameraPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this lens's current RTSP stream status, plus the parent camera's package-camera-related flags where legacy data is configured. Useful if this device doesn't seem to be finding a real package lens - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id="isConnected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Connected</TriggerLabel>
+				<ControlPageLabel>Connected</ControlPageLabel>
+			</State>
+			<State id="eventFeedLive">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Event Feed Live</TriggerLabel>
+				<ControlPageLabel>Event Feed Live</ControlPageLabel>
+			</State>
+			<State id="motionDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Motion Detected</TriggerLabel>
+				<ControlPageLabel>Motion Detected</ControlPageLabel>
+			</State>
+			<State id="lastMotion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Motion</TriggerLabel>
+				<ControlPageLabel>Last Motion</ControlPageLabel>
+			</State>
+			<State id="personDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Person Detected</TriggerLabel>
+				<ControlPageLabel>Person Detected</ControlPageLabel>
+			</State>
+			<State id="lastPersonDetection">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Person Detection</TriggerLabel>
+				<ControlPageLabel>Last Person Detection</ControlPageLabel>
+			</State>
+			<State id="vehicleDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Vehicle Detected</TriggerLabel>
+				<ControlPageLabel>Vehicle Detected</ControlPageLabel>
+			</State>
+			<State id="packageDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Package Detected</TriggerLabel>
+				<ControlPageLabel>Package Detected</ControlPageLabel>
+			</State>
+			<State id="audioDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Audio Event Active (any type)</TriggerLabel>
+				<ControlPageLabel>Audio Detected</ControlPageLabel>
+			</State>
+			<State id="lastAudio">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Audio Event</TriggerLabel>
+				<ControlPageLabel>Last Audio Event</ControlPageLabel>
+			</State>
+			<State id="smokeAlarmDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Smoke Alarm Sound Detected</TriggerLabel>
+				<ControlPageLabel>Smoke Alarm Detected</ControlPageLabel>
+			</State>
+			<State id="coAlarmDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>CO Alarm Sound Detected</TriggerLabel>
+				<ControlPageLabel>CO Alarm Detected</ControlPageLabel>
+			</State>
+			<State id="sirenDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Siren Detected</TriggerLabel>
+				<ControlPageLabel>Siren Detected</ControlPageLabel>
+			</State>
+			<State id="babyCryDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Baby Crying Detected</TriggerLabel>
+				<ControlPageLabel>Baby Cry Detected</ControlPageLabel>
+			</State>
+			<State id="speechDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Speech Detected</TriggerLabel>
+				<ControlPageLabel>Speech Detected</ControlPageLabel>
+			</State>
+			<State id="barkDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Bark Detected</TriggerLabel>
+				<ControlPageLabel>Bark Detected</ControlPageLabel>
+			</State>
+			<State id="burglarAlarmDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Burglar Alarm Sound Detected</TriggerLabel>
+				<ControlPageLabel>Burglar Alarm Detected</ControlPageLabel>
+			</State>
+			<State id="carHornDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Car Horn Detected</TriggerLabel>
+				<ControlPageLabel>Car Horn Detected</ControlPageLabel>
+			</State>
+			<State id="glassBreakDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Glass Break Detected</TriggerLabel>
+				<ControlPageLabel>Glass Break Detected</ControlPageLabel>
+			</State>
+			<State id="doorbellRinging">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Doorbell Ringing</TriggerLabel>
+				<ControlPageLabel>Doorbell Ringing</ControlPageLabel>
+			</State>
+			<State id="lastDoorbellRing">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Doorbell Ring</TriggerLabel>
+				<ControlPageLabel>Last Doorbell Ring</ControlPageLabel>
+			</State>
+			<State id="isDark">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Dark</TriggerLabel>
+				<ControlPageLabel>Is Dark</ControlPageLabel>
+			</State>
+			<State id="voltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Voltage</TriggerLabel>
+				<ControlPageLabel>Voltage</ControlPageLabel>
+			</State>
+			<State id="recordingMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Recording Mode</TriggerLabel>
+				<ControlPageLabel>Recording Mode</ControlPageLabel>
+			</State>
+			<State id="videoMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Video Mode</TriggerLabel>
+				<ControlPageLabel>Video Mode</ControlPageLabel>
+			</State>
+			<State id="hdrType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>HDR Mode</TriggerLabel>
+				<ControlPageLabel>HDR Mode</ControlPageLabel>
+			</State>
+			<State id="micVolume">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Microphone Volume</TriggerLabel>
+				<ControlPageLabel>Mic Volume</ControlPageLabel>
+			</State>
+			<State id="irMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>IR Mode</TriggerLabel>
+				<ControlPageLabel>IR Mode</ControlPageLabel>
+			</State>
+			<State id="statusLight">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Status Light</TriggerLabel>
+				<ControlPageLabel>Status Light</ControlPageLabel>
+			</State>
+			<State id="ipAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>IP Address</TriggerLabel>
+				<ControlPageLabel>IP Address</ControlPageLabel>
+			</State>
+			<State id="macAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>MAC Address</TriggerLabel>
+				<ControlPageLabel>MAC Address</ControlPageLabel>
+			</State>
+			<State id="linkSpeed">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Link Speed</TriggerLabel>
+				<ControlPageLabel>Link Speed</ControlPageLabel>
+			</State>
+			<State id="uptime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Uptime</TriggerLabel>
+				<ControlPageLabel>Uptime</ControlPageLabel>
+			</State>
+			<State id="rtspUrlHigh">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (High)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (High)</ControlPageLabel>
+			</State>
+			<State id="rtspUrlMedium">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (Medium)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (Medium)</ControlPageLabel>
+			</State>
+			<State id="rtspUrlLow">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (Low)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (Low)</ControlPageLabel>
+			</State>
+			<State id="rtspUrlPackage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RTSP URL (Package Camera)</TriggerLabel>
+				<ControlPageLabel>RTSP URL (Package)</ControlPageLabel>
+			</State>
+			<State id="snapshotUrl">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Snapshot URL</TriggerLabel>
+				<ControlPageLabel>Snapshot URL</ControlPageLabel>
+			</State>
+			<State id="firmwareVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware</ControlPageLabel>
+			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Model</TriggerLabel>
+				<ControlPageLabel>Model</ControlPageLabel>
+			</State>
+			<!-- onOffState is native for type="sensor" - do NOT redeclare it
+			     (same Indigo validation rejection as protectCamera/
+			     protectSensor above). Mirrors the parent's own motion-
+			     based Detected/Clear (3.11.1 convention) - same camera,
+			     same meaning. -->
+		</States>
+		<UiDisplayStateId>status</UiDisplayStateId>
+	</Device>
+
+	<!-- NETWORK DEVICE (Switch/AP/Gateway) -->
+	<Device type="relay" id="networkDevice">
+		<Name>UniFi Network Device</Name>
+		<ConfigUI>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true" />
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="true" hidden="true" />
+			<Field id="controllerId" type="menu">
+				<Label>UniFi Controller:</Label>
+				<List class="self" filter="" method="getControllerList"/>
+			</Field>
+			<Field id="deviceMac" type="textfield">
+				<Label>Device MAC:</Label>
+			</Field>
+			<Field id="deviceName" type="textfield">
+				<Label>Device Name:</Label>
+			</Field>
+			<Field id="deviceType" type="textfield">
+				<Label>Device Type:</Label>
+			</Field>
+			<Field id="separator1" type="separator"/>
+			<Field id="createPortsButton" type="button">
+				<Label></Label>
+				<Title>Create All Port Devices</Title>
+				<CallbackMethod>createPortDevices</CallbackMethod>
+			</Field>
+			<Field id="portHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Creates an Indigo device for each physical port on this switch. Only creates ports that don't already exist.</Label>
+			</Field>
+			<Field id="separator2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpNetworkDevicePayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this device's full raw data and logs it in full. Useful for device types this plugin only partially recognises, or if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<!-- onOffState is a native state for type="relay" - do NOT
+			     redeclare it here (see the matching note on protectCamera
+			     above - same Indigo validation rejection). Reflects
+			     connectivity ("Online"/"Offline"), not admin-enabled
+			     state (see `disabled` below for that) - set at runtime via
+			     uiValue on updateStateOnServer, see _apply_netdev_state. -->
+
+			<!-- Status -->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id="isConnected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Connected</TriggerLabel>
+				<ControlPageLabel>Connected</ControlPageLabel>
+			</State>
+			<State id="adopted">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Adopted</TriggerLabel>
+				<ControlPageLabel>Adopted</ControlPageLabel>
+			</State>
+			<State id="disabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Disabled</TriggerLabel>
+				<ControlPageLabel>Disabled</ControlPageLabel>
+			</State>
+			
+			<!-- Device info -->
+			<State id="deviceName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Device Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			<State id="deviceType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Device Type</TriggerLabel>
+				<ControlPageLabel>Type</ControlPageLabel>
+			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Model</TriggerLabel>
+				<ControlPageLabel>Model</ControlPageLabel>
+			</State>
+			<State id="firmwareVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware</ControlPageLabel>
+			</State>
+			<State id="updateAvailable">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Update Available</TriggerLabel>
+				<ControlPageLabel>Update Available</ControlPageLabel>
+			</State>
+			
+			<!-- Network -->
+			<State id="ipAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>IP Address</TriggerLabel>
+				<ControlPageLabel>IP Address</ControlPageLabel>
+			</State>
+			<State id="macAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>MAC Address</TriggerLabel>
+				<ControlPageLabel>MAC Address</ControlPageLabel>
+			</State>
+			<State id="uptime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Uptime</TriggerLabel>
+				<ControlPageLabel>Uptime</ControlPageLabel>
+			</State>
+			<State id="uptimeSeconds">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Uptime (Seconds)</TriggerLabel>
+				<ControlPageLabel>Uptime (Seconds)</ControlPageLabel>
+			</State>
+			
+			<!-- System stats -->
+			<State id="cpuUsage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CPU Usage</TriggerLabel>
+				<ControlPageLabel>CPU %</ControlPageLabel>
+			</State>
+			<State id="memoryUsage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Memory Usage</TriggerLabel>
+				<ControlPageLabel>Memory %</ControlPageLabel>
+			</State>
+			<State id="temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature (°C)</ControlPageLabel>
+			</State>
+			
+			<!-- LED states -->
+			<State id="ledEnabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>LED Enabled</TriggerLabel>
+				<ControlPageLabel>LED Enabled</ControlPageLabel>
+			</State>
+			<State id="ledOverride">
+				<ValueType>String</ValueType>
+				<TriggerLabel>LED Override</TriggerLabel>
+				<ControlPageLabel>LED Override</ControlPageLabel>
+			</State>
+			
+			<!-- Switch-specific -->
+			<State id="portCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Port Count</TriggerLabel>
+				<ControlPageLabel>Ports</ControlPageLabel>
+			</State>
+			<State id="poeConsumption">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PoE Consumption</TriggerLabel>
+				<ControlPageLabel>PoE (Watts)</ControlPageLabel>
+			</State>
+			
+			<!-- AP-specific -->
+			<State id="connectedClients">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Connected Clients</TriggerLabel>
+				<ControlPageLabel>Clients</ControlPageLabel>
+			</State>
+			<State id="guestClients">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Guest Clients</TriggerLabel>
+				<ControlPageLabel>Guest Clients</ControlPageLabel>
+			</State>
+			<State id="userClients">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>User Clients</TriggerLabel>
+				<ControlPageLabel>User Clients</ControlPageLabel>
+			</State>
+			<State id="satisfaction">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Satisfaction</TriggerLabel>
+				<ControlPageLabel>Satisfaction</ControlPageLabel>
+			</State>
+			<State id="channel2G">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>2.4GHz Channel</TriggerLabel>
+				<ControlPageLabel>2.4GHz Channel</ControlPageLabel>
+			</State>
+			<State id="channel5G">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>5GHz Channel</TriggerLabel>
+				<ControlPageLabel>5GHz Channel</ControlPageLabel>
+			</State>
+
+			<!-- Cellular (5G/LTE gateway, e.g. U5G) - only populated when the
+			     device reports an "mbb" block; left at defaults for every
+			     other network device type. Confirmed against a real U5G
+			     Backup payload (3.11.6), not guessed. -->
+			<State id="cellularMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Cellular Mode</TriggerLabel>
+				<ControlPageLabel>Cellular Mode</ControlPageLabel>
+			</State>
+			<State id="cellularState">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Cellular State</TriggerLabel>
+				<ControlPageLabel>Cellular State</ControlPageLabel>
+			</State>
+			<State id="cellularHasCarrier">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Cellular Has Carrier</TriggerLabel>
+				<ControlPageLabel>Has Carrier</ControlPageLabel>
+			</State>
+			<State id="cellularCarrierName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Cellular Carrier</TriggerLabel>
+				<ControlPageLabel>Carrier</ControlPageLabel>
+			</State>
+			<State id="cellularNetworkOperator">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Cellular Network Operator</TriggerLabel>
+				<ControlPageLabel>Network Operator</ControlPageLabel>
+			</State>
+			<State id="cellularRAT">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Cellular Radio Technology</TriggerLabel>
+				<ControlPageLabel>Radio Tech (LTE/5G)</ControlPageLabel>
+			</State>
+			<State id="cellularSignalPercent">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Cellular Signal %</TriggerLabel>
+				<ControlPageLabel>Signal %</ControlPageLabel>
+			</State>
+			<State id="cellularRSRP">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Cellular RSRP (dBm)</TriggerLabel>
+				<ControlPageLabel>RSRP</ControlPageLabel>
+			</State>
+			<State id="cellularRSRQ">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Cellular RSRQ (dB)</TriggerLabel>
+				<ControlPageLabel>RSRQ</ControlPageLabel>
+			</State>
+			<State id="cellularRSSI">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Cellular RSSI (dBm)</TriggerLabel>
+				<ControlPageLabel>RSSI</ControlPageLabel>
+			</State>
+			<State id="cellularSNR">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Cellular SNR (dB)</TriggerLabel>
+				<ControlPageLabel>SNR</ControlPageLabel>
+			</State>
+			<State id="cellularRoaming">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Cellular Roaming</TriggerLabel>
+				<ControlPageLabel>Roaming</ControlPageLabel>
+			</State>
+			<State id="cellularDataRxMB">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Cellular Data Received (MB)</TriggerLabel>
+				<ControlPageLabel>Data Rx (MB)</ControlPageLabel>
+			</State>
+			<State id="cellularDataTxMB">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Cellular Data Sent (MB)</TriggerLabel>
+				<ControlPageLabel>Data Tx (MB)</ControlPageLabel>
+			</State>
+			<State id="cellularDataLimited">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Cellular Data Limited</TriggerLabel>
+				<ControlPageLabel>Data Limited</ControlPageLabel>
+			</State>
+			<State id="cellularDataWarning">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Cellular Data Warning</TriggerLabel>
+				<ControlPageLabel>Data Warning</ControlPageLabel>
+			</State>
+			<State id="cellularRejectReason">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Cellular Reject Reason</TriggerLabel>
+				<ControlPageLabel>Reject Reason</ControlPageLabel>
+			</State>
+
+			<!-- Last event (populated from the legacy WebSocket EVT_* stream,
+			     regardless of whether a dedicated trigger exists for it) -->
+			<State id="lastEventKey">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Key</TriggerLabel>
+				<ControlPageLabel>Last Event</ControlPageLabel>
+			</State>
+			<State id="lastEventMessage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Message</TriggerLabel>
+				<ControlPageLabel>Last Event Message</ControlPageLabel>
+			</State>
+			<State id="lastEventAt">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Time</TriggerLabel>
+				<ControlPageLabel>Last Event Time</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>status</UiDisplayStateId>
+	</Device>
+
+	<!-- UNIFI PORT DEVICE -->
+	<Device type="relay" id="unifiPort">
+		<Name>UniFi Port</Name>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true" />
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="true" hidden="true" />
+		<ConfigUI>
+			<Field id="label1" type="label">
+				<Label>═══ Port Configuration ═══</Label>
+			</Field>
+			<Field id="parentDevice" type="menu">
+				<Label>Parent Switch:</Label>
+				<List class="self" filter="" method="getNetworkDeviceList"/>
+			</Field>
+			<Field id="portNumber" type="menu">
+				<Label>Port Number:</Label>
+				<List class="self" filter="" method="getPortList"/>
+			</Field>
+			<Field id="helpLabel" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Select the switch and port number for this device. Port states will update automatically.</Label>
+			</Field>
+			
+			<Field id="label2" type="label">
+				<Label>═══ Control Mode ═══</Label>
+			</Field>
+			<Field id="controlMode" type="menu" defaultValue="poe">
+				<Label>Device Controls:</Label>
+				<List>
+					<Option value="poe">PoE Control (On/Off toggles PoE)</Option>
+					<Option value="reboot">PoE Reboot (Off button power cycles)</Option>
+					<Option value="port">Port Active/Inactive (On/Off toggles port)</Option>
+				</List>
+			</Field>
+			<Field id="modeHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>• PoE Control: Device state shows PoE enabled/disabled
+• PoE Reboot: Off button uses UniFi power-cycle command (instant reboot)
+• Port Active: Device state shows port enabled/disabled (affects all traffic)</Label>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpPortPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this port's full raw data (from its parent switch's port table) and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<!-- Port identity -->
+			<State id="portNumber">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Port Number</TriggerLabel>
+				<ControlPageLabel>Port</ControlPageLabel>
+			</State>
+			<State id="portName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Port Name</TriggerLabel>
+				<ControlPageLabel>Port Name</ControlPageLabel>
+			</State>
+			<State id="portIdx">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Port Index</TriggerLabel>
+				<ControlPageLabel>Port Index</ControlPageLabel>
+			</State>
+			
+			<!-- Port status -->
+			<State id="enabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Port Enabled</TriggerLabel>
+				<ControlPageLabel>Enabled</ControlPageLabel>
+			</State>
+			<State id="up">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Link Up</TriggerLabel>
+				<ControlPageLabel>Link Up</ControlPageLabel>
+			</State>
+			<State id="speed">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Speed</TriggerLabel>
+				<ControlPageLabel>Speed (Mbps)</ControlPageLabel>
+			</State>
+			<State id="fullDuplex">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Full Duplex</TriggerLabel>
+				<ControlPageLabel>Full Duplex</ControlPageLabel>
+			</State>
+			
+			<!-- PoE -->
+			<State id="poeCapable">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>PoE Capable</TriggerLabel>
+				<ControlPageLabel>PoE Capable</ControlPageLabel>
+			</State>
+			<State id="poeEnable">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>PoE Enabled</TriggerLabel>
+				<ControlPageLabel>PoE Enabled</ControlPageLabel>
+			</State>
+			<State id="poeEnabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>PoE On</TriggerLabel>
+				<ControlPageLabel>PoE On</ControlPageLabel>
+			</State>
+			<State id="poeMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>PoE Mode</TriggerLabel>
+				<ControlPageLabel>PoE Mode</ControlPageLabel>
+			</State>
+			<State id="poePower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PoE Power</TriggerLabel>
+				<ControlPageLabel>PoE Power (W)</ControlPageLabel>
+			</State>
+			<State id="poeVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PoE Voltage</TriggerLabel>
+				<ControlPageLabel>PoE Voltage (V)</ControlPageLabel>
+			</State>
+			<State id="poeCurrent">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PoE Current</TriggerLabel>
+				<ControlPageLabel>PoE Current (mA)</ControlPageLabel>
+			</State>
+			
+			<!-- Connected device -->
+			<State id="hasClient">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Device Connected</TriggerLabel>
+				<ControlPageLabel>Device Connected</ControlPageLabel>
+			</State>
+			<State id="clientMac">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Client MAC</TriggerLabel>
+				<ControlPageLabel>Client MAC</ControlPageLabel>
+			</State>
+			<State id="clientName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Client Name</TriggerLabel>
+				<ControlPageLabel>Client Name</ControlPageLabel>
+			</State>
+			
+			<!-- Traffic stats -->
+			<State id="rxBytes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>RX Bytes</TriggerLabel>
+				<ControlPageLabel>RX Bytes</ControlPageLabel>
+			</State>
+			<State id="txBytes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TX Bytes</TriggerLabel>
+				<ControlPageLabel>TX Bytes</ControlPageLabel>
+			</State>
+			<State id="rxPackets">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>RX Packets</TriggerLabel>
+				<ControlPageLabel>RX Packets</ControlPageLabel>
+			</State>
+			<State id="txPackets">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TX Packets</TriggerLabel>
+				<ControlPageLabel>TX Packets</ControlPageLabel>
+		</State>
+		</States>
+		<UiDisplayStateId>portName</UiDisplayStateId>
+	</Device>
+
+	<!-- UNIFI CLIENT DEVICE -->
+	<Device type="relay" id="clientDevice">
+		<Name>UniFi Client</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu">
+				<Label>UniFi Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="clientMac" type="textfield">
+				<Label>Client MAC Address:</Label>
+			</Field>
+			
+			<Field id="separator1" type="separator"/>
+			<Field id="label1" type="label">
+				<Label>═══ PoE Control Options ═══</Label>
+			</Field>
+			
+			<Field id="controlMode" type="menu" defaultValue="poe">
+				<Label>Control Mode:</Label>
+				<List>
+					<Option value="poe">PoE Control (On/Off toggles PoE)</Option>
+					<Option value="reboot">PoE Reboot (Off button power cycles port)</Option>
+				</List>
+			</Field>
+			
+			<Field id="helpText" type="label" fontSize="small" fontColor="darkgray">
+				<Label>PoE control only works when client is connected via a PoE-capable wired port. If client is on WiFi or non-PoE port, control attempts will log a warning.</Label>
+			</Field>
+			
+			<Field id="separator2" type="separator"/>
+			<Field id="label2" type="label">
+				<Label>═══ Display Options ═══</Label>
+			</Field>
+			
+			<Field id="displayState" type="menu" defaultValue="status">
+				<Label>State Column Display:</Label>
+				<List>
+					<Option value="status">Connection Status (online/offline)</Option>
+					<Option value="clientName">Client Name</Option>
+					<Option value="ipAddress">IP Address</Option>
+					<Option value="connectionType">Connection Type (wired/wireless)</Option>
+					<Option value="lastSeenAge">Last Seen (time ago)</Option>
+					<Option value="switchPort">Switch Port (wired only)</Option>
+					<Option value="apName">AP Name (wireless only)</Option>
+					<Option value="ssid">SSID (wireless only)</Option>
+				</List>
+			</Field>
+
+			<Field id="separator3" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpClientPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this client's full raw data and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<!-- Dynamic display state - updated based on displayState config -->
+			<State id="display">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Display</TriggerLabel>
+				<ControlPageLabel>Display</ControlPageLabel>
+			</State>
+			
+			<!-- Primary display state -->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			
+			<!-- Identity -->
+			<State id="clientName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Client Name</TriggerLabel>
+				<ControlPageLabel>Client Name</ControlPageLabel>
+			</State>
+			<State id="macAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>MAC Address</TriggerLabel>
+				<ControlPageLabel>MAC Address</ControlPageLabel>
+			</State>
+			<State id="ipAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>IP Address</TriggerLabel>
+				<ControlPageLabel>IP Address</ControlPageLabel>
+			</State>
+			<State id="hostname">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Hostname</TriggerLabel>
+				<ControlPageLabel>Hostname</ControlPageLabel>
+			</State>
+			
+			<!-- Connection -->
+			<State id="isConnected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Connected</TriggerLabel>
+				<ControlPageLabel>Is Connected</ControlPageLabel>
+			</State>
+			<State id="connectionType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Connection Type</TriggerLabel>
+				<ControlPageLabel>Connection Type</ControlPageLabel>
+			</State>
+			<State id="connectedSince">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Connected Since</TriggerLabel>
+				<ControlPageLabel>Connected Since</ControlPageLabel>
+			</State>
+			<State id="lastSeenAge">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Seen</TriggerLabel>
+				<ControlPageLabel>Last Seen</ControlPageLabel>
+			</State>
+			<State id="isHome">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Home</TriggerLabel>
+				<ControlPageLabel>Is Home</ControlPageLabel>
+			</State>
+			
+			<!-- Wired connection details -->
+			<State id="switchName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Switch Name</TriggerLabel>
+				<ControlPageLabel>Switch Name</ControlPageLabel>
+			</State>
+			<State id="switchMac">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Switch MAC</TriggerLabel>
+				<ControlPageLabel>Switch MAC</ControlPageLabel>
+			</State>
+			<State id="switchPort">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Switch Port</TriggerLabel>
+				<ControlPageLabel>Switch Port</ControlPageLabel>
+			</State>
+			<State id="portNumber">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Port Number</TriggerLabel>
+				<ControlPageLabel>Port Number</ControlPageLabel>
+			</State>
+			
+			<!-- Wireless connection details -->
+			<State id="apName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>AP Name</TriggerLabel>
+				<ControlPageLabel>AP Name</ControlPageLabel>
+			</State>
+			<State id="apMac">
+				<ValueType>String</ValueType>
+				<TriggerLabel>AP MAC</TriggerLabel>
+				<ControlPageLabel>AP MAC</ControlPageLabel>
+			</State>
+			<State id="ssid">
+				<ValueType>String</ValueType>
+				<TriggerLabel>SSID</TriggerLabel>
+				<ControlPageLabel>SSID</ControlPageLabel>
+			</State>
+			<State id="channel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Channel</TriggerLabel>
+				<ControlPageLabel>Channel</ControlPageLabel>
+			</State>
+			<State id="signalStrength">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Signal Strength</TriggerLabel>
+				<ControlPageLabel>Signal Strength</ControlPageLabel>
+			</State>
+			<State id="radio">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Radio</TriggerLabel>
+				<ControlPageLabel>Radio</ControlPageLabel>
+			</State>
+			
+			<!-- PoE status -->
+			<State id="poeAvailable">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>PoE Available</TriggerLabel>
+				<ControlPageLabel>PoE Available</ControlPageLabel>
+			</State>
+			<State id="poeEnabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>PoE Enabled</TriggerLabel>
+				<ControlPageLabel>PoE Enabled</ControlPageLabel>
+			</State>
+			<State id="poePower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PoE Power (W)</TriggerLabel>
+				<ControlPageLabel>PoE Power (W)</ControlPageLabel>
+			</State>
+			
+			<!-- Blocking -->
+			<State id="isBlocked">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Blocked</TriggerLabel>
+				<ControlPageLabel>Is Blocked</ControlPageLabel>
+			</State>
+			
+			<!-- Device info -->
+			<State id="deviceType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Device Type</TriggerLabel>
+				<ControlPageLabel>Device Type</ControlPageLabel>
+			</State>
+			<State id="manufacturer">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Manufacturer</TriggerLabel>
+				<ControlPageLabel>Manufacturer</ControlPageLabel>
+			</State>
+			<State id="oui">
+				<ValueType>String</ValueType>
+				<TriggerLabel>OUI</TriggerLabel>
+				<ControlPageLabel>OUI</ControlPageLabel>
+			</State>
+			
+			<!-- Experience & Quality -->
+			<State id="experience">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Experience Score</TriggerLabel>
+				<ControlPageLabel>Experience Score</ControlPageLabel>
+			</State>
+			
+			<!-- Traffic -->
+			<State id="rxBytes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>RX Bytes</TriggerLabel>
+				<ControlPageLabel>RX Bytes</ControlPageLabel>
+			</State>
+			<State id="txBytes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TX Bytes</TriggerLabel>
+				<ControlPageLabel>TX Bytes</ControlPageLabel>
+			</State>
+			<State id="rxRate">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>RX Rate (Mbps)</TriggerLabel>
+				<ControlPageLabel>RX Rate (Mbps)</ControlPageLabel>
+			</State>
+			<State id="txRate">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TX Rate (Mbps)</TriggerLabel>
+				<ControlPageLabel>TX Rate (Mbps)</ControlPageLabel>
+			</State>
+			<State id="rxPackets">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>RX Packets</TriggerLabel>
+				<ControlPageLabel>RX Packets</ControlPageLabel>
+			</State>
+			<State id="txPackets">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TX Packets</TriggerLabel>
+				<ControlPageLabel>TX Packets</ControlPageLabel>
+			</State>
+
+			<!-- Last event (populated from the legacy WebSocket EVT_* stream,
+			     regardless of whether a dedicated trigger exists for it) -->
+			<State id="lastEventKey">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Key</TriggerLabel>
+				<ControlPageLabel>Last Event</ControlPageLabel>
+			</State>
+			<State id="lastEventMessage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Message</TriggerLabel>
+				<ControlPageLabel>Last Event Message</ControlPageLabel>
+			</State>
+			<State id="lastEventAt">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Event Time</TriggerLabel>
+				<ControlPageLabel>Last Event Time</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+	<!-- Firewall Policy (v2 API - confirmed against a live controller,
+	     3.12.1 - see ROADMAP.md) -->
+	<Device type="relay" id="firewallPolicy">
+		<Name>UniFi Firewall Policy</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="policyId" type="menu" defaultValue="">
+				<Label>Firewall Policy:</Label>
+				<List class="self" method="getFirewallPolicyList"/>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>Only your own custom policies are listed (Ubiquiti's built-in/predefined ones aren't, since toggling those is rarely useful from automation). On/Off enables or disables the policy. If the list is empty or doesn't show a policy you expect, select the controller first, then reopen this menu.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpFirewallPolicyPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this policy's full raw data and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="policyName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Policy Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			<State id="action">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Action (Allow/Block/Reject)</TriggerLabel>
+				<ControlPageLabel>Action</ControlPageLabel>
+			</State>
+			<State id="hits">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Hit Count</TriggerLabel>
+				<ControlPageLabel>Hits</ControlPageLabel>
+			</State>
+			<State id="lastHit">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Hit</TriggerLabel>
+				<ControlPageLabel>Last Hit</ControlPageLabel>
+			</State>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<!-- onOffState is native for type="relay" - do NOT redeclare it
+			     (see the matching note on networkDevice above). Reflects
+			     the policy's `enabled` flag; uiValue shows Enabled/Disabled. -->
+		</States>
+	</Device>
+
+	<!-- Traffic Route (v2 API - policy-based routing, e.g. VPN routing by
+	     domain/IP/client, confirmed against a live controller, 3.12.1) -->
+	<Device type="relay" id="trafficRoute">
+		<Name>UniFi Traffic Route</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="routeId" type="menu" defaultValue="">
+				<Label>Traffic Route:</Label>
+				<List class="self" method="getTrafficRouteList"/>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>On/Off enables or disables the route. If the list is empty or doesn't show a route you expect, select the controller first, then reopen this menu.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpTrafficRoutePayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this route's full raw data and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="routeDescription">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Route Description</TriggerLabel>
+				<ControlPageLabel>Description</ControlPageLabel>
+			</State>
+			<State id="matchingTarget">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Matching Target (Domain/Internet/IP)</TriggerLabel>
+				<ControlPageLabel>Matching Target</ControlPageLabel>
+			</State>
+			<State id="killSwitchEnabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Kill Switch Enabled</TriggerLabel>
+				<ControlPageLabel>Kill Switch</ControlPageLabel>
+			</State>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<!-- onOffState is native for type="relay" - do NOT redeclare it.
+			     Reflects the route's `enabled` flag; uiValue shows
+			     Enabled/Disabled. -->
+		</States>
+	</Device>
+
+	<!-- Port Forward (classic REST - confirmed against a live controller,
+	     3.12.5 - see ROADMAP.md) -->
+	<Device type="relay" id="portForward">
+		<Name>UniFi Port Forward</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="forwardId" type="menu" defaultValue="">
+				<Label>Port Forward Rule:</Label>
+				<List class="self" method="getPortForwardList"/>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>On/Off enables or disables the rule. If the list is empty or doesn't show a rule you expect, select the controller first, then reopen this menu.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpPortForwardPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this rule's full raw data and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="forwardName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Forward Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			<State id="destinationIP">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Destination IP</TriggerLabel>
+				<ControlPageLabel>Destination IP</ControlPageLabel>
+			</State>
+			<State id="destinationPort">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Destination Port</TriggerLabel>
+				<ControlPageLabel>Destination Port</ControlPageLabel>
+			</State>
+			<State id="forwardPort">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Forward (WAN) Port</TriggerLabel>
+				<ControlPageLabel>Forward Port</ControlPageLabel>
+			</State>
+			<State id="protocol">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Protocol</TriggerLabel>
+				<ControlPageLabel>Protocol</ControlPageLabel>
+			</State>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<!-- onOffState is native for type="relay" - do NOT redeclare it.
+			     Reflects the rule's `enabled` flag; uiValue shows
+			     Enabled/Disabled. -->
+		</States>
+	</Device>
+
+	<!-- WLAN / SSID (classic REST - confirmed against a live controller,
+	     3.12.5 - see ROADMAP.md) -->
+	<Device type="relay" id="wlanDevice">
+		<Name>UniFi WLAN</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="wlanId" type="menu" defaultValue="">
+				<Label>WLAN (SSID):</Label>
+				<List class="self" method="getWLANList"/>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>On/Off enables or disables this SSID. Use the "Change WLAN Password" action to update its passphrase. If the list is empty or doesn't show an SSID you expect, select the controller first, then reopen this menu.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpWLANPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this WLAN's full raw data and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled. Passwords are never included in this dump.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="wlanName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>WLAN Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			<State id="security">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Security Type</TriggerLabel>
+				<ControlPageLabel>Security</ControlPageLabel>
+			</State>
+			<State id="isGuest">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Guest Network</TriggerLabel>
+				<ControlPageLabel>Guest Network</ControlPageLabel>
+			</State>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<!-- onOffState is native for type="relay" - do NOT redeclare it.
+			     Reflects the WLAN's `enabled` flag; uiValue shows
+			     Enabled/Disabled. -->
+		</States>
+	</Device>
+
+	<!-- UniFi Protect Alarm Manager profile (EXPERIMENTAL / UNVERIFIED -
+	     built with no Alarm Manager hardware available to confirm against;
+	     based on one community-confirmed undocumented endpoint. See
+	     ROADMAP.md. If this doesn't work for you, run "Dump Device Payload
+	     to Log" and send the Indigo log to Durosity - it's deliberately
+	     the full raw bootstrap payload, not just the fields this plugin
+	     currently guesses are relevant, so it can actually be fixed. -->
+	<Device type="relay" id="alarmProfile">
+		<Name>UniFi Alarm Profile (Experimental)</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="armProfileId" type="menu" defaultValue="">
+				<Label>Arm Profile:</Label>
+				<List class="self" method="getArmProfileList"/>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>EXPERIMENTAL - built without any Alarm Manager hardware to test against (see the plugin's ROADMAP.md on GitHub). On arms the system to this profile; Off disarms. Requires the Protect account configured for this controller to be a Super Admin with MFA disabled - no lesser role is known to work. If the profile list is empty, or arming/disarming fails, use "Dump Device Payload to Log" below and send the result to Durosity.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpAlarmProfilePayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Dumps the full raw Protect bootstrap payload - deliberately not trimmed down to just what this plugin currently looks for, since that's exactly what's unconfirmed. Doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="profileName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Profile Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<!-- onOffState is native for type="relay" - do NOT redeclare it.
+			     On = Protect is currently armed to THIS profile; uiValue
+			     shows Armed/Disarmed. -->
+		</States>
+	</Device>
+
+	<!-- UniFi Access Door -->
+	<Device type="relay" id="accessDoor">
+		<Name>UniFi Access Door</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="doorId" type="textfield">
+				<Label>Door ID:</Label>
+			</Field>
+			<Field id="unlockMode" type="menu" defaultValue="momentary">
+				<Label>Unlock button behavior:</Label>
+				<List>
+					<Option value="momentary">Tap to unlock (auto-relocks)</Option>
+					<Option value="leaveUnlocked">Leave unlocked (stays open until explicitly locked)</Option>
+				</List>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>This device represents a UniFi Access door lock. Lock always locks immediately. Unlock's behavior depends on the setting above: "Tap to unlock" re-locks automatically (within ~10s if the door is never opened, or once closed again if it is); "Leave unlocked" stays unlocked until Lock is pressed. Separate "Unlock Door (Momentary)" and "Unlock Door (Leave Unlocked)" actions are also available for Action Groups, regardless of this setting.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpDoorPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this door's full raw data and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<!-- Identity -->
+			<State id="doorName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Door Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			
+			<!-- Status -->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			
+			<State id="isLocked">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Locked</TriggerLabel>
+				<ControlPageLabel>Locked</ControlPageLabel>
+			</State>
+			
+			<State id="doorState">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Door State</TriggerLabel>
+				<ControlPageLabel>Door State</ControlPageLabel>
+			</State>
+			
+			<!-- Device info -->
+			<State id="deviceType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Device Type</TriggerLabel>
+				<ControlPageLabel>Type</ControlPageLabel>
+			</State>
+			
+			<State id="firmwareVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware</ControlPageLabel>
+			</State>
+			
+			<!-- Last access -->
+			<State id="lastAccessTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Access Time</TriggerLabel>
+				<ControlPageLabel>Last Access</ControlPageLabel>
+			</State>
+			
+			<State id="lastAccessUser">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Access User</TriggerLabel>
+				<ControlPageLabel>Last User</ControlPageLabel>
+			</State>
+		</States>
+		<!-- Without this, a relay-type device defaults to showing the
+		     generic onOffState (on/off) as its primary status. That state
+		     is what the lock/unlock actions actually control, but "on/off"
+		     reads as meaningless for something called a door - "status"
+		     (locked/unlocked) is always meaningful (every door has a lock;
+		     not every door has a position sensor), so it's the better
+		     default display regardless of whether doorState ever
+		     populates for a given door. -->
+		<UiDisplayStateId>status</UiDisplayStateId>
+	</Device>
+	
+	<!-- UniFi Protect Sensor -->
+	<Device type="sensor" id="protectSensor">
+		<Name>UniFi Protect Sensor</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Controller:</Label>
+				<List class="self" method="getControllerList"/>
+			</Field>
+			<Field id="sensorId" type="textfield">
+				<Label>Sensor ID:</Label>
+			</Field>
+			<Field id="primaryState" type="menu" defaultValue="auto">
+				<Label>Primary State:</Label>
+				<List>
+					<Option value="auto">Auto (by mount type)</Option>
+					<Option value="contact">Open / Closed</Option>
+					<Option value="motion">Motion</Option>
+					<Option value="leak">Leak (Wet / Dry)</Option>
+					<Option value="alarm">Alarm</Option>
+				</List>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>This device represents a UniFi Protect sensor (door, motion, temperature, etc.) "Primary State" controls what the device's on/off shows and means - Auto picks sensibly based on mount type (door/window/garage, leak, or general-purpose), or pin it explicitly if this sensor is used for something its mount type doesn't capture.</Label>
+			</Field>
+			<Field id="sep2" type="separator"/>
+			<Field id="dumpPayloadButton" type="button">
+				<Label></Label>
+				<Title>Dump Device Payload to Log</Title>
+				<CallbackMethod>dumpSensorPayload</CallbackMethod>
+			</Field>
+			<Field id="dumpPayloadHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Fetches this sensor's full raw data and logs it in full. Useful if a state looks wrong/blank/Unknown - doesn't require debug logging to be enabled.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<!-- onOffState is a native state for type="sensor" - do NOT
+			     redeclare it here (see the matching note on protectCamera
+			     above - same Indigo validation rejection). Text shown for
+			     it varies by mount type (Open/Closed, Wet/Dry, Detected/
+			     Clear) and is set at runtime via uiValue on
+			     updateStateOnServer instead - see the mount-type logic
+			     added in 3.11.0. -->
+
+			<!-- Identity -->
+			<State id="sensorName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Sensor Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			
+			<State id="sensorType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Sensor Type</TriggerLabel>
+				<ControlPageLabel>Type</ControlPageLabel>
+			</State>
+			
+			<!-- Status -->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			
+			<State id="isConnected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Connected</TriggerLabel>
+				<ControlPageLabel>Connected</ControlPageLabel>
+			</State>
+			
+			<!-- Contact Sensor States -->
+			<State id="isOpened">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Opened</TriggerLabel>
+				<ControlPageLabel>Opened</ControlPageLabel>
+			</State>
+			
+			<!-- Motion Sensor States -->
+			<State id="motionDetected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Motion Detected</TriggerLabel>
+				<ControlPageLabel>Motion</ControlPageLabel>
+			</State>
+			
+			<State id="lastMotion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Motion</TriggerLabel>
+				<ControlPageLabel>Last Motion</ControlPageLabel>
+			</State>
+			
+			<!-- Temperature Sensor States -->
+			<State id="temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			
+			<State id="humidity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Humidity</TriggerLabel>
+				<ControlPageLabel>Humidity</ControlPageLabel>
+			</State>
+			
+			<!-- Light Sensor States -->
+			<State id="lightLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Light Level</TriggerLabel>
+				<ControlPageLabel>Light</ControlPageLabel>
+			</State>
+			
+			<!-- Battery -->
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Battery Level</TriggerLabel>
+				<ControlPageLabel>Battery</ControlPageLabel>
+			</State>
+			
+			<State id="batteryStatus">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Battery Status</TriggerLabel>
+				<ControlPageLabel>Battery Status</ControlPageLabel>
+			</State>
+			
+			<State id="batteryLow">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Battery Low</TriggerLabel>
+				<ControlPageLabel>Battery Low</ControlPageLabel>
+			</State>
+			
+			<!-- Mount and alarm states (3.2.0+) -->
+			<State id="mountType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Mount Type</TriggerLabel>
+				<ControlPageLabel>Mount Type</ControlPageLabel>
+			</State>
+			
+			<State id="alarmActive">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Alarm Active</TriggerLabel>
+				<ControlPageLabel>Alarm</ControlPageLabel>
+			</State>
+			
+			<!-- Device info -->
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Model</TriggerLabel>
+				<ControlPageLabel>Model</ControlPageLabel>
+			</State>
+			
+			<State id="firmwareVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware</ControlPageLabel>
+			</State>
+			
+			<State id="macAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>MAC Address</TriggerLabel>
+				<ControlPageLabel>MAC</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+	
+	<!-- UniFi Drive UNAS -->
+	<!-- UniFi Drive Storage Pool -->
+	<Device type="custom" id="unifiDrivePool">
+		<Name>UniFi Drive Pool</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Drive Controller:</Label>
+				<List class="self" method="getDriveControllerList"/>
+			</Field>
+			<Field id="poolKey" type="textfield">
+				<Label>Pool Key:</Label>
+				<Description>Identifier for the pool (set automatically by discovery).</Description>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>Each storage pool on the UNAS gets its own device for granular RAID, capacity, and rebuild monitoring.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id="poolName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pool Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			<State id="poolStatus">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pool Status</TriggerLabel>
+				<ControlPageLabel>Pool Status</ControlPageLabel>
+			</State>
+			<State id="capacity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Capacity (GB)</TriggerLabel>
+				<ControlPageLabel>Capacity</ControlPageLabel>
+			</State>
+			<State id="used">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Used (GB)</TriggerLabel>
+				<ControlPageLabel>Used</ControlPageLabel>
+			</State>
+			<State id="available">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Available (GB)</TriggerLabel>
+				<ControlPageLabel>Available</ControlPageLabel>
+			</State>
+			<State id="usagePercent">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Usage Percent</TriggerLabel>
+				<ControlPageLabel>Usage %</ControlPageLabel>
+			</State>
+			<State id="raidLevel">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RAID Level</TriggerLabel>
+				<ControlPageLabel>RAID</ControlPageLabel>
+			</State>
+			<State id="driveCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Drive Count</TriggerLabel>
+				<ControlPageLabel>Drives</ControlPageLabel>
+			</State>
+			<State id="atRiskDriveCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>At-Risk Drive Count</TriggerLabel>
+				<ControlPageLabel>At Risk</ControlPageLabel>
+			</State>
+			<State id="averageDriveTemperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Average Drive Temperature (C)</TriggerLabel>
+				<ControlPageLabel>Avg Temp</ControlPageLabel>
+			</State>
+			<State id="rebuildProgress">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Rebuild Progress %</TriggerLabel>
+				<ControlPageLabel>Rebuild %</ControlPageLabel>
+			</State>
+			<State id="syncProgress">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Sync Progress %</TriggerLabel>
+				<ControlPageLabel>Sync %</ControlPageLabel>
+			</State>
+			<State id="poolProblem">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Pool Problem</TriggerLabel>
+				<ControlPageLabel>Problem</ControlPageLabel>
+			</State>
+			<State id="maintenanceActive">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Maintenance Active</TriggerLabel>
+				<ControlPageLabel>Maintenance</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>poolStatus</UiDisplayStateId>
+	</Device>
+
+	<!-- UniFi Drive Disk -->
+	<Device type="custom" id="unifiDriveDisk">
+		<Name>UniFi Drive Disk</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Drive Controller:</Label>
+				<List class="self" method="getDriveControllerList"/>
+			</Field>
+			<Field id="diskKey" type="textfield">
+				<Label>Disk Key:</Label>
+				<Description>Identifier for the disk (set automatically by discovery).</Description>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>Each physical disk in the UNAS gets its own device for temperature, health, and SMART-style monitoring.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id="diskName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Disk Name</TriggerLabel>
+				<ControlPageLabel>Name</ControlPageLabel>
+			</State>
+			<State id="diskStatus">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Disk Status</TriggerLabel>
+				<ControlPageLabel>Disk Status</ControlPageLabel>
+			</State>
+			<State id="temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature (C)</TriggerLabel>
+				<ControlPageLabel>Temp</ControlPageLabel>
+			</State>
+			<State id="powerOnHours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Power-On Hours</TriggerLabel>
+				<ControlPageLabel>Hours</ControlPageLabel>
+			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Model</TriggerLabel>
+				<ControlPageLabel>Model</ControlPageLabel>
+			</State>
+			<State id="serial">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Serial Number</TriggerLabel>
+				<ControlPageLabel>Serial</ControlPageLabel>
+			</State>
+			<State id="capacityGB">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Capacity (GB)</TriggerLabel>
+				<ControlPageLabel>Capacity</ControlPageLabel>
+			</State>
+			<State id="poolName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pool</TriggerLabel>
+				<ControlPageLabel>Pool</ControlPageLabel>
+			</State>
+			<State id="atRisk">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>At Risk</TriggerLabel>
+				<ControlPageLabel>At Risk</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>diskStatus</UiDisplayStateId>
+	</Device>
+	
+	<!-- UniFi Drive Fan Control -->
+	<Device type="speedcontrol" id="driveFan">
+		<Name>UniFi Drive Fan Control</Name>
+		<ConfigUI>
+			<Field id="controllerId" type="menu" defaultValue="">
+				<Label>Drive Controller:</Label>
+				<List class="self" method="getDriveControllerList"/>
+			</Field>
+			<Field id="sep1" type="separator"/>
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+				<Label>Controls UNAS fan mode via Indigo's standard 4-speed control: speed 0 = Default (firmware auto-control), 1 = Quiet, 2 = Balance, 3 = Cooling. Use the "Set UNAS Fan Mode" action for direct mode selection by name.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="fanMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Fan Mode</TriggerLabel>
+				<ControlPageLabel>Mode</ControlPageLabel>
+			</State>
+			<State id="fanRPM">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Fan RPM (fastest)</TriggerLabel>
+				<ControlPageLabel>RPM (fastest)</ControlPageLabel>
+			</State>
+			<State id="fan1RPM">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Fan 1 RPM</TriggerLabel>
+				<ControlPageLabel>Fan 1 RPM</ControlPageLabel>
+			</State>
+			<State id="fan2RPM">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Fan 2 RPM</TriggerLabel>
+				<ControlPageLabel>Fan 2 RPM</ControlPageLabel>
+			</State>
+			<State id="fan3RPM">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Fan 3 RPM</TriggerLabel>
+				<ControlPageLabel>Fan 3 RPM</ControlPageLabel>
+			</State>
+			<State id="fan4RPM">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Fan 4 RPM</TriggerLabel>
+				<ControlPageLabel>Fan 4 RPM</ControlPageLabel>
+			</State>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>fanMode</UiDisplayStateId>
+	</Device>
+
+	<!-- =================================================================== -->
+	<!-- UNIFI DRIVE CONTROLLER DEVICE                                       -->
+	<!-- Separate controller for UniFi UNAS (Drive) devices. UNAS is its     -->
+	<!-- own hardware appliance with a separate IP and own credentials.      -->
+	<!-- =================================================================== -->
+	<Device type="custom" id="unifiDriveController">
+		<Name>UniFi Controller (Drive)</Name>
+		<ConfigUI>
+			<!-- ===================== Connection ===================== -->
+			<Field id="label_conn" type="label">
+				<Label>═══ Connection ═══</Label>
+			</Field>
+			<Field id="address" type="textfield">
+				<Label>UNAS IP Address:</Label>
+			</Field>
+			<Field id="port" type="textfield" defaultValue="443">
+				<Label>HTTPS Port:</Label>
+			</Field>
+			<Field id="verifySSL" type="checkbox" defaultValue="false">
+				<Label>Verify SSL Certificate:</Label>
+			</Field>
+
+			<!-- ===================== Authentication ===================== -->
+			<Field id="sep_auth" type="separator"/>
+			<Field id="label_auth" type="label">
+				<Label>═══ Authentication ═══</Label>
+			</Field>
+			<Field id="label_auth_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>The UNAS appliance is a separate device from the UDM Pro, with its own admin account and Integrations page.&#10;&#10;Generate an API key from the UNAS web UI (Settings → Control Plane → Integrations on the UNAS itself). If your UNAS version doesn't yet support API keys, leave that field blank and use the local admin username/password instead.</Label>
+			</Field>
+			<Field id="driveApiKey" type="textfield" secure="true">
+				<Label>UNAS API Key:</Label>
+			</Field>
+			<Field id="legacyUsername" type="textfield">
+				<Label>Local Admin Username:</Label>
+			</Field>
+			<Field id="legacyPassword" type="textfield" secure="true">
+				<Label>Local Admin Password:</Label>
+			</Field>
+
+			<!-- ===================== SSH (for fan control) ===================== -->
+			<Field id="sep_ssh" type="separator"/>
+			<Field id="label_ssh" type="label">
+				<Label>═══ SSH (for fan control only) ═══</Label>
+			</Field>
+			<Field id="label_ssh_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>The UNAS REST API for fan control is currently read-only on UniFi firmware (writes return HTTP 500). To actually change fan modes the plugin uses SSH to deploy a small fan control service to the UNAS. Enable SSH on the UNAS via Settings → Control Plane → Console and provide credentials below. Leave blank to disable fan control (monitoring still works).</Label>
+			</Field>
+			<Field id="sshEnabled" type="checkbox" defaultValue="false">
+				<Label>Enable SSH fan control:</Label>
+			</Field>
+			<Field id="sshUsername" type="textfield" defaultValue="root" visibleBindingId="sshEnabled" visibleBindingValue="true">
+				<Label>SSH Username:</Label>
+			</Field>
+			<Field id="sshPassword" type="textfield" secure="true" visibleBindingId="sshEnabled" visibleBindingValue="true">
+				<Label>SSH Password:</Label>
+			</Field>
+			<Field id="sshPort" type="textfield" defaultValue="22" visibleBindingId="sshEnabled" visibleBindingValue="true">
+				<Label>SSH Port:</Label>
+			</Field>
+			<Field id="deployFanControlButton" type="button" visibleBindingId="sshEnabled" visibleBindingValue="true">
+				<Label>Deploy fan control:</Label>
+				<Title>Install/Update Fan Control on UNAS</Title>
+				<CallbackMethod>deployFanControl</CallbackMethod>
+			</Field>
+			<Field id="testFanControlButton" type="button" visibleBindingId="sshEnabled" visibleBindingValue="true">
+				<Label>Test fan control:</Label>
+				<Title>Run Fan Control Diagnostic</Title>
+				<CallbackMethod>testFanControl</CallbackMethod>
+			</Field>
+			<Field id="removeFanControlButton" type="button" visibleBindingId="sshEnabled" visibleBindingValue="true">
+				<Label>Remove fan control:</Label>
+				<Title>Uninstall Fan Control from UNAS</Title>
+				<CallbackMethod>removeFanControl</CallbackMethod>
+			</Field>
+			<Field id="autoRedeployFanControl" type="checkbox" defaultValue="true" visibleBindingId="sshEnabled" visibleBindingValue="true">
+				<Label>Auto-redeploy after firmware updates:</Label>
+				<Description>Once a day, check whether the fan control script is still installed on the UNAS. If a UniFi OS update has wiped it, redeploy silently. Recommended.</Description>
+			</Field>
+
+			<!-- ===================== Test ===================== -->
+			<Field id="sep_test" type="separator"/>
+			<Field id="testDriveConnectionButton" type="button">
+				<Label>Test Connection:</Label>
+				<Title>Test UNAS Connection</Title>
+				<CallbackMethod>testDriveConnection</CallbackMethod>
+			</Field>
+
+			<!-- ===================== Polling ===================== -->
+			<Field id="sep_poll" type="separator"/>
+			<Field id="label_poll" type="label">
+				<Label>═══ Update Intervals ═══</Label>
+			</Field>
+			<Field id="statsIntervalSec" type="menu" defaultValue="300">
+				<Label>Stats Poll Interval:</Label>
+				<List>
+					<Option value="60">1 minute (min)</Option>
+					<Option value="120">2 minutes</Option>
+					<Option value="300">★ 5 minutes (recommended)</Option>
+					<Option value="600">10 minutes</Option>
+					<Option value="900">15 minutes</Option>
+					<Option value="1800">30 minutes (max)</Option>
+				</List>
+				<Description>How often to refresh storage stats, fan RPM, CPU, memory. Recommended: 5 min.</Description>
+			</Field>
+
+			<!-- ===================== Discovery ===================== -->
+			<Field id="sep_disc" type="separator"/>
+			<Field id="label_disc" type="label">
+				<Label>═══ Create Devices ═══</Label>
+			</Field>
+			<Field id="label_disc_help" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Save the controller config first, then click these to create devices. The prefix/suffix below are applied to new device names.</Label>
+			</Field>
+			<Field id="deviceNamePrefix" type="textfield" defaultValue="">
+				<Label>Device name prefix:</Label>
+			</Field>
+			<Field id="deviceNameSuffix" type="textfield" defaultValue="">
+				<Label>Device name suffix:</Label>
+			</Field>
+			<Field id="createDrivePoolsButton" type="button">
+				<Label>Storage Pools:</Label>
+				<Title>Discover and Create Storage Pools</Title>
+				<CallbackMethod>createDrivePools</CallbackMethod>
+			</Field>
+			<Field id="createDriveDisksButton" type="button">
+				<Label>Physical Disks:</Label>
+				<Title>Discover and Create Physical Disks</Title>
+				<CallbackMethod>createDriveDisks</CallbackMethod>
+			</Field>
+			<Field id="createFanDeviceButton" type="button">
+				<Label>UNAS Fan:</Label>
+				<Title>Create UNAS Fan Control Device</Title>
+				<CallbackMethod>createFanDevice</CallbackMethod>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id="connected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Connected</TriggerLabel>
+				<ControlPageLabel>Connected</ControlPageLabel>
+			</State>
+			<State id="hostname">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Hostname</TriggerLabel>
+				<ControlPageLabel>Hostname</ControlPageLabel>
+			</State>
+			<State id="macAddress">
+				<ValueType>String</ValueType>
+				<TriggerLabel>MAC Address</TriggerLabel>
+				<ControlPageLabel>MAC</ControlPageLabel>
+			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Model</TriggerLabel>
+				<ControlPageLabel>Model</ControlPageLabel>
+			</State>
+			<State id="deviceState">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Device State</TriggerLabel>
+				<ControlPageLabel>Device State</ControlPageLabel>
+			</State>
+			<State id="cloudConnected">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Cloud Connected</TriggerLabel>
+				<ControlPageLabel>Cloud</ControlPageLabel>
+			</State>
+			<State id="hasInternet">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Has Internet</TriggerLabel>
+				<ControlPageLabel>Internet</ControlPageLabel>
+			</State>
+			<State id="totalCapacity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Total Capacity (GB)</TriggerLabel>
+				<ControlPageLabel>Capacity</ControlPageLabel>
+			</State>
+			<State id="usedSpace">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Used Space (GB)</TriggerLabel>
+				<ControlPageLabel>Used</ControlPageLabel>
+			</State>
+			<State id="freeSpace">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Free Space (GB)</TriggerLabel>
+				<ControlPageLabel>Free</ControlPageLabel>
+			</State>
+			<State id="usagePercent">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Usage Percent</TriggerLabel>
+				<ControlPageLabel>Usage %</ControlPageLabel>
+			</State>
+			<State id="overallStatus">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Storage Status</TriggerLabel>
+				<ControlPageLabel>Storage</ControlPageLabel>
+			</State>
+			<State id="poolCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pool Count</TriggerLabel>
+				<ControlPageLabel>Pools</ControlPageLabel>
+			</State>
+			<State id="diskCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Disk Count</TriggerLabel>
+				<ControlPageLabel>Disks</ControlPageLabel>
+			</State>
+			<State id="atRiskDiskCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>At-Risk Disk Count</TriggerLabel>
+				<ControlPageLabel>At-Risk Disks</ControlPageLabel>
+			</State>
+			<State id="averageDiskTemperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Average Disk Temperature (C)</TriggerLabel>
+				<ControlPageLabel>Avg Disk Temp</ControlPageLabel>
+			</State>
+			<State id="fanControlDeployed">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Fan Control Deployed</TriggerLabel>
+				<ControlPageLabel>Fan Ctrl Deployed</ControlPageLabel>
+			</State>
+			<State id="fanControlActiveMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Fan Control Active Mode</TriggerLabel>
+				<ControlPageLabel>Fan Mode (SSH)</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>status</UiDisplayStateId>
+	</Device>
+</Devices>
