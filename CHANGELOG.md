@@ -4,6 +4,234 @@ All notable changes to this project are documented here. This starts at
 3.2.0 (the official-Integration-API rewrite); earlier history predates
 public release.
 
+## [3.14.2] - Gate: say when Access's door position never changes
+
+- When a gate move times out and Access's door position didn't change at all
+  during it, the warning now says so: the gate probably moved but Access
+  isn't seeing its position sensor (e.g. a reed magnet has come off).
+- Removed the gate **Position sensor: Reversed** checkbox (3.13.1). It was
+  added for a gate showing open when closed, which turned out to be stale
+  readings (fixed by polling in 3.13.2) and a failed sensor, not a reversed
+  one. Access has its own NO / NC setting for the sensor; a second reversal
+  in the plugin only caused confusion. If you had it ticked, set the sensor
+  type in Access instead.
+
+## [3.14.1] - Debug in the log file no longer turns on Event Log debug
+
+With Log file level at Debugging and Event Log level at Informational, debug
+still showed in the Event Log. The plugin used Indigo's `self.debug` as its
+"debug wanted" flag, but that's a PluginBase property whose setter also
+switches the Event Log handler to DEBUG. The plugin now keeps its own flag
+(`self._debug`) and leaves Indigo's alone.
+
+## [3.14.0] - Separate Event Log and log file levels
+
+The single "Show debug info in event log" checkbox is replaced by two
+levels in Plugins > UniFi > Configure, as in other Indigo plugins:
+
+- **Event Log level** and **Log file level** (Debugging / Informational /
+  Warning / Error), independent of each other. The log file is Indigo's
+  `Logs/com.durosity.indigoplugin.unifi/plugin.log`; with it at Debugging
+  the plugin keeps a detailed record to look back at, while the Event Log
+  stays quiet. File lines include the time to the millisecond, level,
+  thread and function.
+- An existing "Show debug info" setting carries over as Event Log level
+  Debugging.
+- Changing the level now also reaches the API, WebSocket and SSH helpers,
+  which previously kept the debug setting they were created with until
+  the plugin restarted.
+- With debug on: a "Polling alive" line every 10 minutes (shows when
+  polling last ran if updates stop), and a line for every gate state change
+  with the raw Access position and relay values.
+
+## [3.13.5] - Polling watchdog
+
+After about a day, all polled state updates stopped (gate position included)
+with nothing in the log. Every update that isn't pushed by a WebSocket -
+door/gate positions, stats, re-syncs, relocks - runs on one polling thread,
+and nothing noticed if that thread got stuck.
+
+- New watchdog (`runConcurrentThread`): if the polling loop hasn't ticked
+  for 5 minutes, it logs an error with where the loop is stuck, and starts
+  a new polling thread. The stuck one exits if it ever wakes.
+- SSH (UNAS fan control): `recv_exit_status()` waited forever on a hung
+  command or dead connection; it now times out with the command's timeout.
+
+## [3.13.4] - Gate obstruction never cleared; now optional
+
+After a gate failed to finish a move, `stopped` / `obstructed` only cleared
+once the position sensor next changed. A failed open with the gate still
+closed, or a sensor that doesn't change, left it obstructed indefinitely,
+and HomeKit kept showing the gate as obstructed.
+
+- A timed-out move now shows `stopped` for 30 s, then the gate reports its
+  sensor position again.
+- `obstructed` is only set for a timed-out move if the new **Obstructed**
+  checkbox is ticked (off by default). Access has no obstruction sensor, so
+  it's only a guess from the travel time, and HomeKit turns it into an
+  obstruction alert.
+- A new open/close command clears it straight away.
+- It still clears at once if the gate moves.
+
+## [3.13.3] - Install fails on Intel Macs
+
+Installing failed on Intel Macs with `Failed building wheel for cryptography`
+(needs Rust and OpenSSL). cryptography, which paramiko depends on, stopped
+publishing Intel macOS wheels in 49.0.0, so pip tried to build it from
+source. `requirements.txt` now caps it below 49 on Intel Macs only; Apple
+silicon is unaffected.
+
+## [3.13.2] - Gate / door position going stale
+
+A gate that closed by itself kept showing `open`: Access doors were only
+re-read when an Access WebSocket event named the door's `door_id`, or after
+a command from Indigo, and nothing polled them.
+
+- Gates are now re-read every 5 s.
+- All other doors are re-read at the stats interval.
+- WebSocket events that carry the door as `id`, `location_id` or `door.id`
+  instead of `door_id` now update the door too.
+
+## [3.13.1] - Gate: reversed position sensor option
+
+New **Position sensor: Reversed** checkbox for gate use. A gate's closed-limit
+contact is often wired the opposite way to a door sensor, so Access reports
+the gate open when it's closed; ticking this swaps open and closed.
+
+## [3.13.0] - Access doors can be used as a gate / garage door
+
+For a Door Hub (e.g. Door Hub Mini) wired to a gate or garage door opener
+with a momentary input, locked/unlocked doesn't describe anything useful.
+New **Used for** setting on the UniFi Access Door device: *Door lock*
+(default, unchanged) or *Gate / garage door*. In gate use:
+
+- Turn On opens and Turn Off closes, each by pulsing the relay (a momentary
+  unlock, relocked after 5 s). Close can be set to do nothing, for gates
+  that close themselves.
+- `doorState` is `open` / `closed` / `opening` / `closing` / `stopped`, from
+  the door position sensor plus a configurable travel time (Access only
+  reports open or closed). A move that doesn't finish within the travel
+  time shows `stopped` and sets the new `obstructed` state.
+- `onOffState` is on = not closed; the device is no longer a lock subtype.
+- HomeKitLink Siri: publish it as a Garage Door and tick *Enable to Invert
+  Controls* (on opens) - it reads `doorState` and `obstructed` directly.
+
+Also fixed: the momentary-unlock auto-relock waited for `doorState` to be
+`closed`, but Access reports a closed door as `close`, so it never saw the
+door close again and relied on the 10 s timeout.
+
+## [3.12.19] - Read-only mode now only covers UniFi Network
+
+With read-only mode on, unlocking an Access door failed with `Read-only mode
+is on - not sending PUT /api/v1/developer/doors/.../unlock`. Read-only mode is
+meant to stop the plugin changing network settings, not to stop you using
+your devices, so it now applies to the **UniFi Network** application only
+(firewall policies, traffic routes, port forwards, WLANs, PoE/port and device
+control, client purge).
+
+Protect, Access and Drive are no longer restricted: door unlock/lock,
+Enable RTSP Streaming (creates missing streams again), camera controls,
+UNAS fan control, Wake-on-LAN and the fan-control auto-redeploy all work
+with read-only mode on.
+
+## [3.12.18] - Fixed "UI dynamic list function returned illegal ID string"
+
+Opening a trigger (e.g. Camera: Doorbell Ring) logged `UI dynamic list
+function returned illegal ID string (ignoring):` - Indigo rejects an empty
+option id, and every "Any Camera / Sensor / Device / Port / Client / Door"
+choice used one, as did the "(none found ...)" placeholder in the package
+camera, firewall policy, traffic route, port forward, WLAN and arm profile
+menus.
+
+- "Any ..." options now have the id `any`; trigger matching treats `any`
+  and `""` (triggers saved by earlier versions) as "any device".
+- Placeholders now have the id `none`, and a new `validateDeviceConfigUi`
+  refuses to save one of those device types while its menu is still on the
+  placeholder (or empty), so it's never stored and used as a UniFi id.
+
+## [3.12.17] - Read-only mode
+
+New plugin-level setting, **Read-only mode** (Plugins > UniFi > Configure,
+off by default). For setups that only want the plugin as a data source -
+e.g. Protect cameras feeding a HomeKit bridge - and never want it to change
+anything in UniFi.
+
+When on:
+
+- Every API client's request helper (Network integration + legacy,
+  Protect integration + legacy, Access, Drive API key + legacy) refuses any
+  method other than GET/HEAD/OPTIONS *before anything is sent*, raising
+  `UnifiReadOnlyError`. Enforced at those choke points rather than per
+  action, so any current or future write path - actions, device on/off,
+  automations, background tasks - is covered. Logins and WebSockets are
+  unaffected (not writes).
+- SSH helpers that change the UNAS (write/remove file, deploy/remove fan
+  control, set fan mode) are blocked before connecting; the daily fan
+  control auto-redeploy is skipped. Read-only SSH status checks still run.
+- Wake-on-LAN is not sent.
+- **Enable RTSP Streaming** (camera and package camera) reads the streams
+  that already exist and fills the `rtspUrl*` states from them, creating
+  none; any requested quality that doesn't exist yet is named in a warning
+  (enable it in the Protect app, or turn read-only off just to run the
+  action once).
+- Client purge runs as a dry run.
+- `UnifiReadOnlyError` deliberately does not subclass `UnifiAPIError`, so a
+  blocked write can never be mistaken for a sent-but-failed one (Drive's
+  `_request_raw` turns `UnifiAPIError` into a soft result).
+
+Indigo-side behaviour is unchanged: devices are still created and states
+updated as normal.
+
+## [3.12.16] - Protect camera reliability fixes (WebSocket, doorbell, snapshot, package camera)
+
+Found during a review of the camera path used by HomeKit bridges
+(HomeKitLink Siri reads this plugin's camera states for motion, doorbell
+rings, RTSP URLs and snapshots).
+
+- **WebSocket ping/pong frames are now masked.** RFC 6455 5.1 requires
+  every client-to-server frame to be masked and lets the server close the
+  connection on an unmasked one. Pings/pongs were sent unmasked, so the
+  first keepalive (or reply to a server ping) could get the socket closed.
+  This is a likely cause of the periodic "clean close" reconnects on
+  Protect's sockets, and the motion/doorbell gaps around them. Pong
+  payloads are capped at 125 bytes (RFC 6455 5.5); the old pong also packed
+  extended lengths in native rather than network byte order.
+- **502/503 on the WebSocket handshake no longer stop it for good.** They
+  mean the app behind UniFi OS is restarting (Protect/Network/Access
+  update, console reboot). Previously the WebSocket thread exited and
+  real-time events stopped until the plugin was restarted; now it retries
+  with the normal exponential backoff. 404 is still treated as permanent.
+- **One doorbell press = one ring.** Protect sends more than one message
+  per press with the same event id; each fired the `doorbellRing` trigger
+  and moved `lastDoorbellRing`, which HomeKit bridges announce as separate
+  rings. Rings are now de-duplicated by event id (last 50 kept). A second
+  press within 5 s restarts the `doorbellRinging` auto-clear timer instead
+  of being cleared early by the first press's timer.
+- **Take Snapshot action works.** It sent `Authorization: Bearer`; the
+  Protect Integration API takes `X-API-KEY`, as every other call here
+  already does. The save path (required, despite being labelled optional)
+  now accepts `~`, and the dialog says it is required.
+- **Package Camera states no longer get stuck.** `doorbellRinging` is now
+  cleared on the package camera too; an event-feed drop now clears its
+  motion/detection states and `eventFeedLive` the same as the parent
+  camera's; and its non-event states (status, isConnected, firmware...)
+  are refreshed on every stats interval instead of only when linked.
+- The event-feed health check now iterates over a copy of the camera map
+  (it runs on the polling thread while device links are added from
+  Indigo's thread).
+
+## [3.12.15] - Fixed "Enable RTSP Streaming" action dialog failing to open
+
+The Enable RTSP Streaming action (protectCamera) declared the
+`enablePackage` checkbox twice in Actions.xml. Indigo rejects any ConfigUI
+with a duplicate field id (`PAXDialogControllerError -- Field ID
+enablePackage was already used`), so the action's dialog could not be
+opened at all - which blocked filling in the rtspUrl* states that
+HomeKitLink Siri and other external viewers depend on. The duplicate is
+removed; the single remaining checkbox is read by the existing code
+unchanged. All other ConfigUI blocks were checked for duplicate field ids:
+none found.
+
 ## [3.12.14] - Fixed NameNotUniqueError during bulk client discovery
 
 User hit `NameNotUniqueError` running Create All Clients. Root cause:

@@ -1,9 +1,35 @@
 <?xml version="1.0"?>
 <PluginConfig>
-	<Field id="showDebugInfo" type="checkbox" defaultValue="false">
-		<Label>Show debug info in event log:</Label>
+	<Field id="showDebugLevel" type="menu" defaultValue="20">
+		<Label>Event Log level:</Label>
+		<List>
+			<Option value="10">Debugging Messages</Option>
+			<Option value="20">Informational Messages</Option>
+			<Option value="30">Warning Messages</Option>
+			<Option value="40">Error Messages</Option>
+		</List>
+	</Field>
+	<Field id="showDebugFileLevel" type="menu" defaultValue="20">
+		<Label>Log file level:</Label>
+		<List>
+			<Option value="10">Debugging Messages</Option>
+			<Option value="20">Informational Messages</Option>
+			<Option value="30">Warning Messages</Option>
+			<Option value="40">Error Messages</Option>
+		</List>
+	</Field>
+	<Field id="logLevelHelp" type="label" fontSize="small" fontColor="darkgray">
+		<Label>The log file is Indigo's Logs/com.durosity.indigoplugin.unifi/plugin.log (Indigo keeps several days). Set the file to Debugging to keep a detailed record to look back at after a problem, while the Event Log stays at Informational.</Label>
 	</Field>
 	
+	<Field id="readOnlyMode" type="checkbox" defaultValue="false">
+		<Label>Read-only mode:</Label>
+		<Description>Never change UniFi Network settings</Description>
+	</Field>
+	<Field id="readOnlyHelp" type="label" fontSize="small" fontColor="darkgray">
+		<Label>When ticked, the plugin never changes your UniFi Network application: firewall policies, traffic routes, port forwards, WLANs, PoE/port control, device restarts and client purge are blocked and logged instead of sent (client purge runs as a dry run). Protect, Access and Drive are not affected - cameras, RTSP streams, door unlocks, doorbells and the UNAS keep working as normal.</Label>
+	</Field>
+
 	<Field id="separator1" type="separator"/>
 	<Field id="label1" type="label">
 		<Label>═══ Client Auto-Discovery ═══</Label>

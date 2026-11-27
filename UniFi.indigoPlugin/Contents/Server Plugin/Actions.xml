@@ -339,7 +339,10 @@
 		<CallbackMethod>actionTakeSnapshot</CallbackMethod>
 		<ConfigUI>
 			<Field id="savePath" type="textfield">
-				<Label>Save Path (optional):</Label>
+				<Label>Save Path:</Label>
+			</Field>
+			<Field id="savePathHelp" type="label" fontSize="small" fontColor="darkgray">
+				<Label>Required. Full path of the JPEG file to write, e.g. ~/Pictures/frontdoor.jpg (an existing file is overwritten).</Label>
 			</Field>
 		</ConfigUI>
 	</Action>
@@ -361,11 +364,8 @@
 				<Label>Low quality:</Label>
 			</Field>
 			<Field id="enablePackage" type="checkbox" defaultValue="false">
-				<Label>Package camera (if present):</Label>
-			</Field>
-			<Field id="enablePackage" type="checkbox" defaultValue="false">
 				<Label>Package camera quality:</Label>
-				<Description>Only applicable to cameras with a dedicated package-detection sensor (e.g. G4 Doorbell Pro).</Description>
+				<Description>Only applicable to cameras with a dedicated package lens (e.g. G4 Doorbell Pro, G6 Entry).</Description>
 			</Field>
 		</ConfigUI>
 	</Action>

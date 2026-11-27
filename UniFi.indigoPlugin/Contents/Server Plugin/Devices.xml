@@ -1848,15 +1848,39 @@
 			<Field id="doorId" type="textfield">
 				<Label>Door ID:</Label>
 			</Field>
-			<Field id="unlockMode" type="menu" defaultValue="momentary">
+			<Field id="doorUse" type="menu" defaultValue="door">
+				<Label>Used for:</Label>
+				<List>
+					<Option value="door">Door lock</Option>
+					<Option value="gate">Gate / garage door (momentary relay)</Option>
+				</List>
+			</Field>
+			<Field id="unlockMode" type="menu" defaultValue="momentary" visibleBindingId="doorUse" visibleBindingValue="door">
 				<Label>Unlock button behavior:</Label>
 				<List>
 					<Option value="momentary">Tap to unlock (auto-relocks)</Option>
 					<Option value="leaveUnlocked">Leave unlocked (stays open until explicitly locked)</Option>
 				</List>
 			</Field>
+			<Field id="gateTravelSec" type="textfield" defaultValue="20" visibleBindingId="doorUse" visibleBindingValue="gate">
+				<Label>Travel time (seconds):</Label>
+			</Field>
+			<Field id="gateReportObstructed" type="checkbox" defaultValue="false" visibleBindingId="doorUse" visibleBindingValue="gate">
+				<Label>Obstructed:</Label>
+				<Description>Set when a move doesn't finish within the travel time</Description>
+			</Field>
+			<Field id="gateCloseAction" type="menu" defaultValue="pulse" visibleBindingId="doorUse" visibleBindingValue="gate">
+				<Label>Close command:</Label>
+				<List>
+					<Option value="pulse">Pulse the relay again</Option>
+					<Option value="none">Nothing - the gate closes itself</Option>
+				</List>
+			</Field>
+			<Field id="gateHelp" type="label" fontSize="small" alignWithControl="true" visibleBindingId="doorUse" visibleBindingValue="gate">
+				<Label>Turn On opens and Turn Off closes, each by pulsing the relay (a momentary unlock). Position comes from the door position sensor (DPS) input: doorState is open / closed / opening / closing / stopped, and on = not closed. "Travel time" is how long a full open or close takes: the gate shows opening or closing for that long, and if it hasn't reached the end by then it shows stopped for 30 seconds (and "obstructed" too, if ticked - HomeKit shows that as an obstruction alert), then its real position again. Pick "Nothing" for Close command if your gate controller closes itself and a second pulse would re-open or hold it. If open and closed are the wrong way round, change the door position sensor setting (NO / NC) for this door in UniFi Access. Without a DPS wired the plugin can't see the gate: it assumes each command works and the move takes the travel time, and never reports obstructed. For HomeKitLink Siri, publish it as a Garage Door and tick "Enable to Invert Controls" (on opens).</Label>
+			</Field>
 			<Field id="sep1" type="separator"/>
-			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true">
+			<Field id="instructionsLabel" type="label" fontSize="small" alignWithControl="true" visibleBindingId="doorUse" visibleBindingValue="door">
 				<Label>This device represents a UniFi Access door lock. Lock always locks immediately. Unlock's behavior depends on the setting above: "Tap to unlock" re-locks automatically (within ~10s if the door is never opened, or once closed again if it is); "Leave unlocked" stays unlocked until Lock is pressed. Separate "Unlock Door (Momentary)" and "Unlock Door (Leave Unlocked)" actions are also available for Action Groups, regardless of this setting.</Label>
 			</Field>
 			<Field id="sep2" type="separator"/>
@@ -1894,6 +1918,13 @@
 				<ValueType>String</ValueType>
 				<TriggerLabel>Door State</TriggerLabel>
 				<ControlPageLabel>Door State</ControlPageLabel>
+			</State>
+
+			<!-- Gate / garage door use (doorUse = gate) -->
+			<State id="obstructed">
+				<ValueType boolType="YesNo">Boolean</ValueType>
+				<TriggerLabel>Gate Obstructed</TriggerLabel>
+				<ControlPageLabel>Obstructed</ControlPageLabel>
 			</State>
 			
 			<!-- Device info -->
